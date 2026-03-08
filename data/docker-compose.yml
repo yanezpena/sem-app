@@ -1,0 +1,20 @@
+services:
+  postgres:
+    image: postgres:latest
+    container_name: postgres-flHoa
+    environment:
+      POSTGRES_DB: flHoa
+      POSTGRES_USER: flHoa
+      POSTGRES_PASSWORD: flHoa
+    ports:
+      - "5432:5432"
+    networks:
+      - pg-network
+    volumes:
+      - ~/projects/dataVols/postgres/flHoa:/var/lib/postgresql/data
+
+networks:
+  pg-network:
+
+volumes:
+  pg-data:

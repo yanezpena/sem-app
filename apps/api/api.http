@@ -1,0 +1,48 @@
+@baseUrl = http://localhost:3000
+
+### Health check
+GET {{baseUrl}}
+
+### Get all users
+GET {{baseUrl}}/users
+
+### Register new user
+POST {{baseUrl}}/auth/register
+Content-Type: application/json
+
+{
+  "email": "user@example.com",
+  "password": "password123",
+  "name": "John Doe"
+}
+
+### Login user
+POST {{baseUrl}}/auth/login
+Content-Type: application/json
+
+{
+  "email": "user@example.com",
+  "password": "password123"
+}
+
+### Google OAuth (web redirect)
+GET {{baseUrl}}/auth/google
+
+### Google OAuth Mobile
+POST {{baseUrl}}/auth/google/mobile
+Content-Type: application/json
+
+{
+  "accessToken": "google_access_token_here"
+}
+
+### Facebook OAuth (web redirect)
+GET {{baseUrl}}/auth/facebook
+
+### Facebook OAuth Mobile
+POST {{baseUrl}}/auth/facebook/mobile
+Content-Type: application/json
+
+{
+  "accessToken": "facebook_access_token_here"
+}

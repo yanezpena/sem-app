@@ -1,5 +1,6 @@
 import React from "react";
 import { Drawer } from "expo-router/drawer";
+import type { DrawerContentComponentProps } from "@react-navigation/drawer";
 import { Pressable, View, Text, StyleSheet, Platform } from "react-native";
 import { useRouter } from "expo-router";
 import { SymbolView } from "expo-symbols";
@@ -9,7 +10,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import Colors from "@/constants/Colors";
 import { useColorScheme } from "@/components/useColorScheme";
 
-function CustomDrawerContent({ navigation }: any) {
+function CustomDrawerContent({ navigation }: DrawerContentComponentProps) {
   const { logout } = useAuth();
   const router = useRouter();
   const colorScheme = useColorScheme();
@@ -92,7 +93,7 @@ export default function DrawerLayout() {
   return (
     <Drawer
       initialRouteName="(tabs)"
-      drawerContent={(props: any) => <CustomDrawerContent {...props} />}
+      drawerContent={(props) => <CustomDrawerContent {...props} />}
       screenOptions={{
         headerShown: true,
         headerStyle: { backgroundColor: Colors[colorScheme].background },

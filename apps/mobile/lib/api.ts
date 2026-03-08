@@ -21,8 +21,8 @@ function authHeaders(token: string) {
 function normalizeApiError(raw: unknown, fallback: string): string {
   if (!raw) return fallback;
 
-  // If it's a string, try to parse JSON first; otherwise use as-is.
   if (typeof raw === "string") {
+    if (raw.trim().startsWith("<")) return fallback;
     try {
       const parsed = JSON.parse(raw);
       return normalizeApiError(parsed, fallback);
@@ -35,7 +35,7 @@ function normalizeApiError(raw: unknown, fallback: string): string {
     return fallback;
   }
 
-  const data = raw as any;
+  const data = raw as { message?: string | string[]; errors?: string[] };
   const messages: string[] = [];
 
   if (Array.isArray(data.message)) {
@@ -74,12 +74,6 @@ async function throwFriendlyError(
   throw new Error(message);
 }
 
-export async function fetchUsers(): Promise<User[]> {
-  const res = await fetch(`${API_URL}/users`);
-  if (!res.ok) throw new Error("Failed to fetch users");
-  return res.json();
-}
-
 export async function registerUser(data: RegisterDto): Promise<AuthResponse> {
   const res = await fetch(`${API_URL}/auth/register`, {
     method: "POST",
@@ -87,7 +81,7 @@ export async function registerUser(data: RegisterDto): Promise<AuthResponse> {
     body: JSON.stringify(data),
   });
   if (!res.ok) {
-    await throwFriendlyError(res as any, "Registration failed");
+    await throwFriendlyError(res, "Registration failed");
   }
   return res.json();
 }
@@ -99,7 +93,7 @@ export async function loginUser(data: LoginDto): Promise<AuthResponse> {
     body: JSON.stringify(data),
   });
   if (!res.ok) {
-    await throwFriendlyError(res as any, "Login failed");
+    await throwFriendlyError(res, "Login failed");
   }
   return res.json();
 }
@@ -112,7 +106,9 @@ export async function fetchExpense(
   const res = await fetch(`${API_URL}/expenses/${id}`, {
     headers: authHeaders(token),
   });
-  if (!res.ok) throw new Error("Failed to fetch expense");
+  if (!res.ok) {
+    await throwFriendlyError(res, "Failed to fetch expense");
+  }
   return res.json();
 }
 
@@ -127,7 +123,9 @@ export async function fetchExpenses(
   const query = search.toString();
   const url = `${API_URL}/expenses${query ? `?${query}` : ""}`;
   const res = await fetch(url, { headers: authHeaders(token) });
-  if (!res.ok) throw new Error("Failed to fetch expenses");
+  if (!res.ok) {
+    await throwFriendlyError(res, "Failed to fetch expenses");
+  }
   return res.json();
 }
 
@@ -141,7 +139,7 @@ export async function createExpense(
     body: JSON.stringify(data),
   });
   if (!res.ok) {
-    await throwFriendlyError(res as any, "Failed to add expense");
+    await throwFriendlyError(res, "Failed to add expense");
   }
   return res.json();
 }
@@ -157,7 +155,7 @@ export async function updateExpense(
     body: JSON.stringify(data),
   });
   if (!res.ok) {
-    await throwFriendlyError(res as any, "Failed to update expense");
+    await throwFriendlyError(res, "Failed to update expense");
   }
   return res.json();
 }
@@ -167,14 +165,18 @@ export async function deleteExpense(token: string, id: string): Promise<void> {
     method: "DELETE",
     headers: authHeaders(token),
   });
-  if (!res.ok) throw new Error("Failed to delete expense");
+  if (!res.ok) {
+    await throwFriendlyError(res, "Failed to delete expense");
+  }
 }
 
 export async function fetchCategories(token: string): Promise<Category[]> {
   const res = await fetch(`${API_URL}/categories`, {
     headers: authHeaders(token),
   });
-  if (!res.ok) throw new Error("Failed to fetch categories");
+  if (!res.ok) {
+    await throwFriendlyError(res, "Failed to fetch categories");
+  }
   return res.json();
 }
 
@@ -210,7 +212,7 @@ export async function uploadReceipt(
     body: formData,
   });
   if (!res.ok) {
-    await throwFriendlyError(res as any, "Failed to upload receipt");
+    await throwFriendlyError(res, "Failed to upload receipt");
   }
   return res.json();
 }

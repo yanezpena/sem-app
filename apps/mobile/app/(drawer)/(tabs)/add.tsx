@@ -25,6 +25,7 @@ import { Text as ThemedText } from "@/components/Themed";
 import { PhotoWithTooltip } from "@/components/PhotoWithTooltip";
 import { useAuth } from "@/contexts/AuthContext";
 import { createExpense, fetchCategories, uploadReceipt } from "@/lib/api";
+import { resolveReceiptUrl } from "@/lib/utils";
 import type { CreateExpenseDto } from "shared";
 
 export default function AddExpenseScreen() {
@@ -40,6 +41,8 @@ export default function AddExpenseScreen() {
   const [receiptUri, setReceiptUri] = useState<string | null>(null);
   const [receiptUrl, setReceiptUrl] = useState<string | null>(null);
   const [photoModalUri, setPhotoModalUri] = useState<string | null>(null);
+  const [amountError, setAmountError] = useState<string | null>(null);
+  const [categoryError, setCategoryError] = useState<string | null>(null);
 
   const { data: categories = [], isLoading: categoriesLoading } = useQuery({
     queryKey: ["categories"],
@@ -93,9 +96,17 @@ export default function AddExpenseScreen() {
   };
 
   const handleSubmit = () => {
+    setAmountError(null);
+    setCategoryError(null);
     const num = parseFloat(amount);
-    if (isNaN(num) || num <= 0) return;
-    if (!categoryId) return;
+    if (isNaN(num) || num <= 0) {
+      setAmountError("Please enter a valid amount greater than 0");
+      return;
+    }
+    if (!categoryId) {
+      setCategoryError("Please select a category");
+      return;
+    }
     if (!date || isNaN(date.getTime())) return;
     const desc = note.trim() || categories.find((c) => c.id === categoryId)?.name;
     createMutation.mutate({
@@ -137,24 +148,11 @@ export default function AddExpenseScreen() {
           {receiptUri || receiptUrl ? (
             <View style={styles.receiptPreview}>
               <PhotoWithTooltip
-                uri={
-                  receiptUri
-                    ? receiptUri
-                    : receiptUrl!.startsWith("http")
-                      ? receiptUrl!
-                      : `${process.env.EXPO_PUBLIC_API_URL ?? "http://localhost:3000"}${receiptUrl}`
-                }
+                uri={receiptUri ?? resolveReceiptUrl(receiptUrl) ?? ""}
                 style={{ width: "100%" }}
                 imageStyle={styles.receiptImage}
                 tooltipText="Click to view full size"
-                onPress={() => {
-                  const uri = receiptUri
-                    ? receiptUri
-                    : receiptUrl!.startsWith("http")
-                      ? receiptUrl!
-                      : `${process.env.EXPO_PUBLIC_API_URL ?? "http://localhost:3000"}${receiptUrl}`;
-                  setPhotoModalUri(uri);
-                }}
+                onPress={() => setPhotoModalUri(receiptUri ?? resolveReceiptUrl(receiptUrl) ?? "")}
               />
               {uploadMutation.isPending ? (
                 <View style={styles.uploadOverlay}>
@@ -198,9 +196,11 @@ export default function AddExpenseScreen() {
             placeholder="0.00"
             placeholderTextColor="#94a3b8"
             value={amount}
-            onChangeText={setAmount}
+            onChangeText={(v) => { setAmount(v); setAmountError(null); }}
             keyboardType="decimal-pad"
+            accessibilityLabel="Amount"
           />
+          {amountError && <ThemedText style={styles.fieldError}>{amountError}</ThemedText>}
         </View>
 
         {/* Date Card */}
@@ -327,7 +327,10 @@ export default function AddExpenseScreen() {
             <ThemedText style={styles.cardTitle}>Category *</ThemedText>
           </View>
           {categoriesLoading ? (
-            <ActivityIndicator size="small" />
+            <View style={styles.loadingCategories}>
+              <ActivityIndicator size="small" />
+              <ThemedText style={styles.loadingText}>Loading categories…</ThemedText>
+            </View>
           ) : (
             <View style={styles.categoryRow}>
               {categories.map((cat) => (
@@ -337,9 +340,10 @@ export default function AddExpenseScreen() {
                     styles.categoryChip,
                     categoryId === cat.id && styles.categoryChipSelected,
                   ]}
-                  onPress={() =>
-                    setCategoryId(categoryId === cat.id ? null : cat.id)
-                  }
+                  onPress={() => {
+                    setCategoryId(categoryId === cat.id ? null : cat.id);
+                    setCategoryError(null);
+                  }}
                 >
                   <RNText
                     style={
@@ -354,6 +358,7 @@ export default function AddExpenseScreen() {
               ))}
             </View>
           )}
+          {categoryError && <ThemedText style={styles.fieldError}>{categoryError}</ThemedText>}
         </View>
 
         {(createMutation.isError || uploadMutation.isError) && (
@@ -437,6 +442,9 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   cardTitle: { fontSize: 14, fontWeight: "600", color: "#475569" },
+  fieldError: { color: "#b91c1c", fontSize: 13, marginTop: 6 },
+  loadingCategories: { flexDirection: "row", alignItems: "center", gap: 8 },
+  loadingText: { fontSize: 14, color: "#64748b" },
   receiptPreview: { position: "relative" },
   receiptImage: { width: "100%", height: 180, borderRadius: 12 },
   uploadOverlay: {

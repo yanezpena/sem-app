@@ -6,32 +6,15 @@ import {
   ScrollView,
   ActivityIndicator,
   useWindowDimensions,
+  Pressable,
 } from "react-native";
 import { useRouter } from "expo-router";
 import { useQuery } from "@tanstack/react-query";
 
 import { useAuth } from "@/contexts/AuthContext";
 import { fetchExpenses } from "@/lib/api";
+import { formatAmount, getYearRange, MONTH_NAMES } from "@/lib/formatters";
 import type { Expense } from "shared";
-
-function getYearRange(year: number) {
-  return {
-    startDate: `${year}-01-01`,
-    endDate: `${year}-12-31`,
-  };
-}
-
-function formatAmount(amount: number) {
-  return new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency: "USD",
-  }).format(amount);
-}
-
-const MONTH_NAMES = [
-  "Jan", "Feb", "Mar", "Apr", "May", "Jun",
-  "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
-];
 
 function monthlyTotals(expenses: Expense[]): number[] {
   const totals = Array(12).fill(0);
@@ -121,13 +104,25 @@ export default function DashboardScreen() {
   const { startDate: prevStart, endDate: prevEnd } = getYearRange(previousYear);
   const { startDate: currStart, endDate: currEnd } = getYearRange(currentYear);
 
-  const { data: prevExpenses = [], isLoading: prevLoading } = useQuery({
+  const {
+    data: prevExpenses = [],
+    isLoading: prevLoading,
+    isError: prevError,
+    error: prevErr,
+    refetch: refetchPrev,
+  } = useQuery({
     queryKey: ["expenses", "dashboard", prevStart, prevEnd],
     queryFn: () => fetchExpenses(token!, { startDate: prevStart, endDate: prevEnd }),
     enabled: !!user && !!token,
   });
 
-  const { data: currExpenses = [], isLoading: currLoading } = useQuery({
+  const {
+    data: currExpenses = [],
+    isLoading: currLoading,
+    isError: currError,
+    error: currErr,
+    refetch: refetchCurr,
+  } = useQuery({
     queryKey: ["expenses", "dashboard", currStart, currEnd],
     queryFn: () => fetchExpenses(token!, { startDate: currStart, endDate: currEnd }),
     enabled: !!user && !!token,
@@ -165,11 +160,34 @@ export default function DashboardScreen() {
   }
 
   const isLoading = prevLoading || currLoading;
+  const hasError = prevError || currError;
+  const errorMsg = prevErr || currErr;
 
   if (isLoading) {
     return (
       <View style={styles.centered}>
-        <ActivityIndicator size="large" color="#6366f1" />
+        <ActivityIndicator size="large" color="#6366f1" accessibilityLabel="Loading dashboard" />
+      </View>
+    );
+  }
+
+  if (hasError) {
+    return (
+      <View style={styles.centered}>
+        <Text style={styles.error}>
+          {errorMsg instanceof Error ? errorMsg.message : "Could not load dashboard."}
+        </Text>
+        <Pressable
+          style={styles.retryBtn}
+          onPress={() => {
+            refetchPrev();
+            refetchCurr();
+          }}
+          accessibilityRole="button"
+          accessibilityLabel="Retry"
+        >
+          <Text style={styles.retryText}>Try again</Text>
+        </Pressable>
       </View>
     );
   }
@@ -263,4 +281,7 @@ const styles = StyleSheet.create({
   chartTotalPrev: {
     color: "#475569",
   },
+  error: { color: "#c00", textAlign: "center" },
+  retryBtn: { marginTop: 16, padding: 12, backgroundColor: "#eef2ff", borderRadius: 8 },
+  retryText: { color: "#6366f1", fontSize: 16, fontWeight: "600" },
 });

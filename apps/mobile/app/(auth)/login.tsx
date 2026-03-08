@@ -11,8 +11,6 @@ import { useRouter } from "expo-router";
 import { useAuth } from "@/contexts/AuthContext";
 
 export default function LoginScreen() {
-  console.log("🟢 LoginScreen: Component rendered");
-
   const { login, loginWithGoogle, loginWithFacebook } = useAuth();
   const router = useRouter();
   const [email, setEmail] = useState("");
@@ -26,8 +24,8 @@ export default function LoginScreen() {
     try {
       await login({ email, password });
       router.replace("/(drawer)/(tabs)/dashboard");
-    } catch (e: any) {
-      setError(e.message || "Login failed");
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : "Login failed");
     } finally {
       setLoading(false);
     }
@@ -42,26 +40,20 @@ export default function LoginScreen() {
         password: "password123",
       });
       router.replace("/(drawer)/(tabs)/dashboard");
-    } catch (e: any) {
-      setError(e.message || "Test login failed");
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : "Test login failed");
     } finally {
       setLoading(false);
     }
   };
 
   const handleGoogleLogin = async () => {
-    console.log("🔵 LoginScreen: Google login button pressed");
     setError(null);
     try {
-      console.log("🔵 LoginScreen: Calling loginWithGoogle...");
       await loginWithGoogle();
-      console.log(
-        "🔵 LoginScreen: Google login successful, navigating to tabs",
-      );
       router.replace("/(drawer)/(tabs)/dashboard");
-    } catch (e: any) {
-      console.log("🔴 LoginScreen: Google login failed:", e.message);
-      setError(e.message || "Google login failed");
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : "Google login failed");
     }
   };
 
@@ -70,8 +62,8 @@ export default function LoginScreen() {
     try {
       await loginWithFacebook();
       router.replace("/(drawer)/(tabs)/dashboard");
-    } catch (e: any) {
-      setError(e.message || "Facebook login failed");
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : "Facebook login failed");
     }
   };
 
@@ -135,7 +127,7 @@ export default function LoginScreen() {
         )}
         <View style={styles.footer}>
           <Text>New here?</Text>
-          <Pressable onPress={() => router.push("/register" as any)}>
+          <Pressable onPress={() => router.push("/(auth)/register" as const)}>
             <Text style={styles.link}> Create an account</Text>
           </Pressable>
         </View>

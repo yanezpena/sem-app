@@ -25,8 +25,8 @@ export default function RegisterScreen() {
     try {
       await register({ email, password, name: name || undefined });
       router.replace("/(drawer)/(tabs)/dashboard");
-    } catch (e: any) {
-      setError(e.message || "Registration failed");
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : "Registration failed");
     } finally {
       setLoading(false);
     }
@@ -76,7 +76,7 @@ export default function RegisterScreen() {
         />
         <View style={styles.footer}>
           <Text>Already have an account?</Text>
-          <Pressable onPress={() => router.push("/login" as any)}>
+          <Pressable onPress={() => router.push("/(auth)/login" as const)}>
             <Text style={styles.link}> Sign in</Text>
           </Pressable>
         </View>

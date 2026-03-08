@@ -10,40 +10,24 @@ import {
   Platform,
   Modal,
 } from "react-native";
+
+const isWeb = Platform.OS === "web";
 import { useRouter } from "expo-router";
 import { useQuery } from "@tanstack/react-query";
-import DateTimePicker from "@react-native-community/datetimepicker";
 import * as Sharing from "expo-sharing";
 import * as FileSystem from "expo-file-system";
 import * as Print from "expo-print";
 import { SymbolView } from "expo-symbols";
 
 import { useAuth } from "@/contexts/AuthContext";
+import { YearSelector } from "@/components/YearSelector";
 import { fetchExpenses, fetchCategories } from "@/lib/api";
+import { formatAmount, getYearRange, MONTH_NAMES } from "@/lib/formatters";
 import type { Expense } from "shared";
-
-function getYearRange(year: number) {
-  return {
-    startDate: `${year}-01-01`,
-    endDate: `${year}-12-31`,
-  };
-}
-
-function formatAmount(amount: number) {
-  return new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency: "USD",
-  }).format(amount);
-}
 
 function escapeHtml(s: string): string {
   return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 }
-
-const MONTH_NAMES = [
-  "Jan", "Feb", "Mar", "Apr", "May", "Jun",
-  "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
-];
 
 type ReportMatrix = {
   categories: string[];
@@ -88,21 +72,29 @@ export default function ReportsScreen() {
   const router = useRouter();
   const now = new Date();
   const [selectedYear, setSelectedYear] = useState(now.getFullYear());
-  const [showYearPicker, setShowYearPicker] = useState(false);
   const [exporting, setExporting] = useState<"pdf" | "csv" | null>(null);
-
-  const isWeb = Platform.OS === "web";
-  const pickerDate = new Date(selectedYear, 0, 1);
 
   const { startDate, endDate } = getYearRange(selectedYear);
 
-  const { data: expenses = [], isLoading } = useQuery({
+  const {
+    data: expenses = [],
+    isLoading: expensesLoading,
+    isError: expensesError,
+    error: expensesErr,
+    refetch: refetchExpenses,
+  } = useQuery({
     queryKey: ["expenses", "report", startDate, endDate],
     queryFn: () => fetchExpenses(token!, { startDate, endDate }),
     enabled: !!user && !!token,
   });
 
-  const { data: categoriesList = [] } = useQuery({
+  const {
+    data: categoriesList = [],
+    isLoading: categoriesLoading,
+    isError: categoriesError,
+    error: categoriesErr,
+    refetch: refetchCategories,
+  } = useQuery({
     queryKey: ["categories"],
     queryFn: () => fetchCategories(token!),
     enabled: !!user && !!token,
@@ -120,7 +112,7 @@ export default function ReportsScreen() {
 
   const generateMatrixCSV = () => {
     const headers = ["Month", ...matrix.categories, "Total"];
-    const rows: string[][] = [];
+    const rows: string[] = [];
     for (let m = 0; m < 12; m++) {
       const row = [
         MONTH_NAMES[m],
@@ -316,118 +308,36 @@ export default function ReportsScreen() {
     return null;
   }
 
+  const isLoading = expensesLoading || categoriesLoading;
+  const hasError = expensesError || categoriesError;
+  const errorMsg = expensesErr || categoriesErr;
+
+  if (hasError) {
+    return (
+      <View style={[styles.container, styles.centered]}>
+        <Text style={styles.errorText}>
+          {errorMsg instanceof Error ? errorMsg.message : "Could not load report data."}
+        </Text>
+        <Pressable
+          style={styles.retryBtn}
+          onPress={() => {
+            refetchExpenses();
+            refetchCategories();
+          }}
+          accessibilityRole="button"
+          accessibilityLabel="Retry"
+        >
+          <Text style={styles.retryText}>Try again</Text>
+        </Pressable>
+      </View>
+    );
+  }
+
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
       <Text style={styles.title}>Expenses by Month & Category</Text>
 
-      {/* Year selector */}
-      <View style={styles.selectorCard}>
-        <Text style={styles.selectorLabel}>Select Year</Text>
-        <View style={styles.selectorRow}>
-          <Pressable
-            style={styles.monthNavBtn}
-            onPress={() => setSelectedYear((y) => y - 1)}
-          >
-            <SymbolView name="chevron.left" tintColor="#6366f1" size={24} />
-          </Pressable>
-          <Pressable
-            style={styles.monthDisplay}
-            onPress={() => setShowYearPicker(true)}
-          >
-            <Text style={styles.monthDisplayText}>{selectedYear}</Text>
-            <SymbolView name="chevron.down" tintColor="#6366f1" size={14} />
-          </Pressable>
-          <Pressable
-            style={styles.monthNavBtn}
-            onPress={() => setSelectedYear((y) => y + 1)}
-          >
-            <SymbolView name="chevron.right" tintColor="#6366f1" size={24} />
-          </Pressable>
-        </View>
-        <Pressable
-          style={styles.pickMonthBtn}
-          onPress={() => setShowYearPicker(true)}
-        >
-          <SymbolView name="calendar" tintColor="#6366f1" size={18} />
-          <Text style={styles.pickMonthBtnText}>Pick year</Text>
-        </Pressable>
-
-        {/* Web: HTML5 number input for year */}
-        {showYearPicker && isWeb && (
-          <View style={styles.monthPickerContainer}>
-            {React.createElement("input", {
-              type: "number",
-              min: 2020,
-              max: 2030,
-              value: selectedYear,
-              onChange: (e: { target: { value: string } }) => {
-                const val = parseInt((e.target as HTMLInputElement).value, 10);
-                if (!isNaN(val) && val >= 2020 && val <= 2030) {
-                  setSelectedYear(val);
-                }
-              },
-              style: {
-                width: "100%",
-                padding: 16,
-                fontSize: 18,
-                border: "none",
-                borderTop: "1px solid #e2e8f0",
-                outline: "none",
-                boxSizing: "border-box",
-              },
-            })}
-            <Pressable
-              style={styles.monthPickerDoneBtn}
-              onPress={() => setShowYearPicker(false)}
-            >
-              <Text style={styles.monthPickerDoneText}>Done</Text>
-            </Pressable>
-          </View>
-        )}
-
-        {/* Android: native date picker */}
-        {showYearPicker && Platform.OS === "android" && (
-          <DateTimePicker
-            value={pickerDate}
-            mode="date"
-            display="default"
-            onChange={(_, date) => {
-              setShowYearPicker(false);
-              if (date) setSelectedYear(date.getFullYear());
-            }}
-          />
-        )}
-
-        {/* iOS: spinner in modal */}
-        {showYearPicker && Platform.OS === "ios" && (
-          <Modal visible transparent animationType="slide">
-            <Pressable
-              style={styles.monthPickerOverlay}
-              onPress={() => setShowYearPicker(false)}
-            >
-              <Pressable
-                style={styles.monthPickerContent}
-                onPress={(e) => e.stopPropagation()}
-              >
-                <View style={styles.monthPickerHeader}>
-                  <Text style={styles.monthPickerTitle}>Select year</Text>
-                  <Pressable onPress={() => setShowYearPicker(false)} hitSlop={16}>
-                    <Text style={styles.monthPickerDoneText}>Done</Text>
-                  </Pressable>
-                </View>
-                <DateTimePicker
-                  value={pickerDate}
-                  mode="date"
-                  display="spinner"
-                  onChange={(_, date) => {
-                    if (date) setSelectedYear(date.getFullYear());
-                  }}
-                />
-              </Pressable>
-            </Pressable>
-          </Modal>
-        )}
-      </View>
+      <YearSelector selectedYear={selectedYear} onYearChange={setSelectedYear} />
 
       {isLoading ? (
         <ActivityIndicator size="large" style={styles.loader} />
@@ -505,76 +415,11 @@ export default function ReportsScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1 },
   content: { padding: 16 },
+  centered: { justifyContent: "center", alignItems: "center", padding: 24 },
   title: { fontSize: 24, fontWeight: "700", marginBottom: 20 },
-  selectorCard: {
-    backgroundColor: "#f8fafc",
-    borderRadius: 16,
-    padding: 16,
-    marginBottom: 20,
-    borderWidth: 1,
-    borderColor: "#e2e8f0",
-  },
-  selectorLabel: { fontSize: 14, fontWeight: "600", marginBottom: 12, color: "#64748b" },
-  selectorRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
-  monthNavBtn: { padding: 8 },
-  monthDisplay: {
-    flex: 1,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 6,
-  },
-  monthDisplayText: { fontSize: 18, fontWeight: "600" },
-  pickMonthBtn: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 8,
-    marginTop: 12,
-    paddingVertical: 12,
-    borderRadius: 10,
-    backgroundColor: "#eef2ff",
-  },
-  pickMonthBtnText: { fontSize: 14, fontWeight: "600", color: "#6366f1" },
-  monthPickerContainer: {
-    marginTop: 12,
-    backgroundColor: "#fff",
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: "#e2e8f0",
-    overflow: "hidden" as const,
-  },
-  monthPickerDoneBtn: {
-    padding: 16,
-    borderTopWidth: 1,
-    borderTopColor: "#e2e8f0",
-    alignItems: "center" as const,
-  },
-  monthPickerDoneText: {
-    fontSize: 17,
-    fontWeight: "600",
-    color: "#6366f1",
-  },
-  monthPickerOverlay: {
-    flex: 1,
-    backgroundColor: "rgba(0,0,0,0.5)",
-    justifyContent: "flex-end",
-  },
-  monthPickerContent: {
-    backgroundColor: "#fff",
-    borderTopLeftRadius: 16,
-    borderTopRightRadius: 16,
-    paddingBottom: 34,
-  },
-  monthPickerHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    padding: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: "#e2e8f0",
-  },
-  monthPickerTitle: { fontSize: 17, fontWeight: "600" },
+  errorText: { color: "#c00", textAlign: "center" },
+  retryBtn: { marginTop: 16, padding: 12, backgroundColor: "#eef2ff", borderRadius: 8 },
+  retryText: { color: "#6366f1", fontSize: 16, fontWeight: "600" },
   loader: { marginTop: 48 },
   summaryCard: {
     backgroundColor: "#eef2ff",

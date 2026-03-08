@@ -14,11 +14,9 @@ import {
   Modal,
 } from "react-native";
 import { useRouter, useLocalSearchParams } from "expo-router";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 const isWeb = Platform.OS === "web";
-const API_URL = process.env.EXPO_PUBLIC_API_URL ?? "http://localhost:3000";
-
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import * as ImagePicker from "expo-image-picker";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { SymbolView } from "expo-symbols";
@@ -33,6 +31,7 @@ import {
   fetchCategories,
   uploadReceipt,
 } from "@/lib/api";
+import { resolveReceiptUrl } from "@/lib/utils";
 import type { UpdateExpenseDto } from "shared";
 
 export default function EditExpenseScreen() {
@@ -131,7 +130,7 @@ export default function EditExpenseScreen() {
       description: desc ?? undefined,
       categoryId,
       date: date.toISOString().split("T")[0],
-      receiptUrl: receiptUrl ?? null,
+      receiptUrl: receiptUrl ?? undefined,
     });
   };
 
@@ -192,24 +191,11 @@ export default function EditExpenseScreen() {
           {receiptUri || receiptUrl ? (
             <View style={styles.receiptPreview}>
               <PhotoWithTooltip
-                uri={
-                  receiptUri
-                    ? receiptUri
-                    : receiptUrl!.startsWith("http")
-                      ? receiptUrl!
-                      : `${API_URL}${receiptUrl}`
-                }
+                uri={receiptUri ?? resolveReceiptUrl(receiptUrl) ?? ""}
                 style={{ width: "100%" }}
                 imageStyle={styles.receiptImage}
                 tooltipText="Click to view full size"
-                onPress={() => {
-                  const uri = receiptUri
-                    ? receiptUri
-                    : receiptUrl!.startsWith("http")
-                      ? receiptUrl!
-                      : `${API_URL}${receiptUrl}`;
-                  setPhotoModalUri(uri);
-                }}
+                onPress={() => setPhotoModalUri(receiptUri ?? resolveReceiptUrl(receiptUrl) ?? "")}
               />
               {uploadMutation.isPending ? (
                 <View style={styles.uploadOverlay}>

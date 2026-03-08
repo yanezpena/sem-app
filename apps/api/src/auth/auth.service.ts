@@ -47,9 +47,49 @@ export class AuthService {
     });
   }
 
+  private hashToken(token: string): string {
+    return crypto.createHash('sha256').update(token).digest('hex');
+  }
+
+  private async createAndStoreRefreshToken(userId: string): Promise<string> {
+    const raw = crypto.randomBytes(32).toString('hex');
+    const tokenHash = this.hashToken(raw);
+    const expiresAt = new Date();
+    expiresAt.setDate(expiresAt.getDate() + 7);
+    await this.prisma.refreshToken.create({
+      data: { userId, tokenHash, expiresAt },
+    });
+    return raw;
+  }
+
+  async refresh(refreshToken: string): Promise<{
+    user: UserWithoutPassword;
+    accessToken: string;
+    refreshToken: string;
+  }> {
+    const tokenHash = this.hashToken(refreshToken);
+    const stored = await this.prisma.refreshToken.findFirst({
+      where: { tokenHash },
+      include: { user: true },
+    });
+    if (!stored || stored.expiresAt < new Date()) {
+      if (stored) await this.prisma.refreshToken.delete({ where: { id: stored.id } });
+      throw new UnauthorizedException('Invalid or expired refresh token');
+    }
+    await this.prisma.refreshToken.delete({ where: { id: stored.id } });
+    const { hashedPassword, ...user } = stored.user as User & { hashedPassword?: string };
+    const newRefreshToken = await this.createAndStoreRefreshToken(user.id);
+    return {
+      user,
+      accessToken: this.signToken(user),
+      refreshToken: newRefreshToken,
+    };
+  }
+
   async register(dto: RegisterDto): Promise<{
     user: UserWithoutPassword;
     accessToken: string;
+    refreshToken: string;
   }> {
     // make a helper type that includes the password field because the generated
     // client may not yet reflect our schema change until `prisma generate` is run
@@ -75,12 +115,14 @@ export class AuthService {
     })) as UserWithPassword;
     // remove password before returning
     const { hashedPassword, ...result } = user;
-    return { user: result, accessToken: this.signToken(result) };
+    const refreshToken = await this.createAndStoreRefreshToken(result.id);
+    return { user: result, accessToken: this.signToken(result), refreshToken };
   }
 
   async login(dto: LoginDto): Promise<{
     user: UserWithoutPassword;
     accessToken: string;
+    refreshToken: string;
   }> {
     type UserWithPassword = User & { hashedPassword: string };
 
@@ -94,7 +136,8 @@ export class AuthService {
       throw new UnauthorizedException('Invalid credentials');
     }
     const { hashedPassword, ...result } = user;
-    return { user: result, accessToken: this.signToken(result) };
+    const refreshToken = await this.createAndStoreRefreshToken(result.id);
+    return { user: result, accessToken: this.signToken(result), refreshToken };
   }
 
   async findOrCreateOAuthUser(
@@ -169,9 +212,14 @@ export class AuthService {
   }
 
   /** Build auth response for OAuth users (User may have null hashedPassword) */
-  authResponse(user: User): { user: UserWithoutPassword; accessToken: string } {
+  async authResponse(user: User): Promise<{
+    user: UserWithoutPassword;
+    accessToken: string;
+    refreshToken: string;
+  }> {
     const { hashedPassword, ...safe } = user as User & { hashedPassword?: string };
-    return { user: safe, accessToken: this.signToken(safe) };
+    const refreshToken = await this.createAndStoreRefreshToken(safe.id);
+    return { user: safe, accessToken: this.signToken(safe), refreshToken };
   }
 
   async verifyFacebookToken(accessToken: string): Promise<User> {

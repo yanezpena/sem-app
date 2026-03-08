@@ -8,7 +8,7 @@ import {
   Pressable,
 } from "react-native";
 import { useRouter } from "expo-router";
-import { useAuth } from "../contexts/AuthContext";
+import { useAuth } from "../_contexts/AuthContext";
 
 export default function LoginScreen() {
   console.log("🟢 LoginScreen: Component rendered");
@@ -25,9 +25,25 @@ export default function LoginScreen() {
     setLoading(true);
     try {
       await login({ email, password });
-      router.replace("/(tabs)");
+      router.replace("/(drawer)/dashboard");
     } catch (e: any) {
       setError(e.message || "Login failed");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleTestLogin = async () => {
+    setError(null);
+    setLoading(true);
+    try {
+      await login({
+        email: "user@example.com",
+        password: "password123",
+      });
+      router.replace("/(drawer)/dashboard");
+    } catch (e: any) {
+      setError(e.message || "Test login failed");
     } finally {
       setLoading(false);
     }
@@ -42,7 +58,7 @@ export default function LoginScreen() {
       console.log(
         "🔵 LoginScreen: Google login successful, navigating to tabs",
       );
-      router.replace("/(tabs)");
+      router.replace("/(drawer)/dashboard");
     } catch (e: any) {
       console.log("🔴 LoginScreen: Google login failed:", e.message);
       setError(e.message || "Google login failed");
@@ -53,7 +69,7 @@ export default function LoginScreen() {
     setError(null);
     try {
       await loginWithFacebook();
-      router.replace("/(tabs)");
+      router.replace("/(drawer)/dashboard");
     } catch (e: any) {
       setError(e.message || "Facebook login failed");
     }
@@ -108,6 +124,15 @@ export default function LoginScreen() {
           onPress={handleFacebookLogin}
           color="#1877F2"
         />
+        {__DEV__ && (
+          <Pressable
+            style={styles.testLoginBtn}
+            onPress={handleTestLogin}
+            disabled={loading}
+          >
+            <Text style={styles.testLoginText}>Test login (no password)</Text>
+          </Pressable>
+        )}
         <View style={styles.footer}>
           <Text>New here?</Text>
           <Pressable onPress={() => router.push("/register" as any)}>
@@ -163,6 +188,14 @@ const styles = StyleSheet.create({
   },
   divider: { marginVertical: 20, alignItems: "center" },
   dividerText: { color: "#666", fontSize: 14 },
+  testLoginBtn: {
+    marginTop: 16,
+    padding: 12,
+    backgroundColor: "#fef3c7",
+    borderRadius: 8,
+    alignItems: "center",
+  },
+  testLoginText: { color: "#92400e", fontSize: 14, fontWeight: "500" },
   footer: { flexDirection: "row", justifyContent: "center", marginTop: 24 },
   link: { color: "#0066cc" },
 });

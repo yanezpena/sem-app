@@ -6,6 +6,7 @@ import type {
   Expense,
   CreateExpenseDto,
   UpdateExpenseDto,
+  Category,
 } from "shared";
 
 const API_URL = process.env.EXPO_PUBLIC_API_URL ?? "http://localhost:3000";
@@ -104,10 +105,28 @@ export async function loginUser(data: LoginDto): Promise<AuthResponse> {
 }
 
 // Expense API (requires token)
-export async function fetchExpenses(token: string): Promise<Expense[]> {
-  const res = await fetch(`${API_URL}/expenses`, {
+export async function fetchExpense(
+  token: string,
+  id: string
+): Promise<Expense> {
+  const res = await fetch(`${API_URL}/expenses/${id}`, {
     headers: authHeaders(token),
   });
+  if (!res.ok) throw new Error("Failed to fetch expense");
+  return res.json();
+}
+
+export async function fetchExpenses(
+  token: string,
+  params?: { startDate?: string; endDate?: string; categoryId?: string }
+): Promise<Expense[]> {
+  const search = new URLSearchParams();
+  if (params?.startDate) search.set("startDate", params.startDate);
+  if (params?.endDate) search.set("endDate", params.endDate);
+  if (params?.categoryId) search.set("categoryId", params.categoryId);
+  const query = search.toString();
+  const url = `${API_URL}/expenses${query ? `?${query}` : ""}`;
+  const res = await fetch(url, { headers: authHeaders(token) });
   if (!res.ok) throw new Error("Failed to fetch expenses");
   return res.json();
 }
@@ -149,4 +168,49 @@ export async function deleteExpense(token: string, id: string): Promise<void> {
     headers: authHeaders(token),
   });
   if (!res.ok) throw new Error("Failed to delete expense");
+}
+
+export async function fetchCategories(token: string): Promise<Category[]> {
+  const res = await fetch(`${API_URL}/categories`, {
+    headers: authHeaders(token),
+  });
+  if (!res.ok) throw new Error("Failed to fetch categories");
+  return res.json();
+}
+
+export async function uploadReceipt(
+  token: string,
+  uri: string,
+  fileName?: string
+): Promise<{ url: string }> {
+  const formData = new FormData();
+  const name = fileName ?? "receipt.jpg";
+
+  if (typeof window !== "undefined" && uri.startsWith("blob:")) {
+    const blob = await fetch(uri).then((r) => r.blob());
+    const mime = blob.type || "image/jpeg";
+    const ext = mime.split("/")[1] || "jpg";
+    const file = new File([blob], name.endsWith(`.${ext}`) ? name : `receipt.${ext}`, {
+      type: mime,
+    });
+    formData.append("receipt", file);
+  } else {
+    formData.append("receipt", {
+      uri,
+      name,
+      type: "image/jpeg",
+    } as any);
+  }
+
+  const res = await fetch(`${API_URL}/expenses/upload-receipt`, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+    body: formData,
+  });
+  if (!res.ok) {
+    await throwFriendlyError(res as any, "Failed to upload receipt");
+  }
+  return res.json();
 }

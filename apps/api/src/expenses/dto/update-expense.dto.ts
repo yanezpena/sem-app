@@ -1,4 +1,4 @@
-import { IsNumber, IsOptional, IsString, IsDateString } from 'class-validator';
+import { IsNumber, IsOptional, IsString, IsDateString, ValidateIf } from 'class-validator';
 
 export class UpdateExpenseDto {
   @IsOptional()
@@ -10,8 +10,13 @@ export class UpdateExpenseDto {
   description?: string;
 
   @IsOptional()
+  @ValidateIf((o) => o.receiptUrl != null)
   @IsString()
-  category?: string;
+  receiptUrl?: string | null;
+
+  @IsOptional()
+  @IsString()
+  categoryId?: string;
 
   @IsOptional()
   @IsDateString()

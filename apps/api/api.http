@@ -1,10 +1,13 @@
 @baseUrl = http://localhost:3000
+@token = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJjbW1mb3FwYzUwMDAwMndzNXZwNTBwbGc1IiwiZW1haWwiOiJ1c2VyQGV4YW1wbGUuY29tIiwiaWF0IjoxNzcyOTMyOTY5LCJleHAiOjE3NzI5MzM4Njl9.8yGnm9m46Th-qxZjLPCQZfPPlM_giXNC4Y1HwfgcTe4
 
 ### Health check
 GET {{baseUrl}}
 
 ### Get all users
 GET {{baseUrl}}/users
+
+### --- Auth ---
 
 ### Register new user
 POST {{baseUrl}}/auth/register
@@ -23,6 +26,14 @@ Content-Type: application/json
 {
   "email": "user@example.com",
   "password": "password123"
+}
+
+### Refresh token (use refreshToken from login/register response)
+POST {{baseUrl}}/auth/refresh
+Content-Type: application/json
+
+{
+  "refreshToken": "your_refresh_token_here"
 }
 
 ### Google OAuth (web redirect)
@@ -46,3 +57,67 @@ Content-Type: application/json
 {
   "accessToken": "facebook_access_token_here"
 }
+
+# ===========================================
+# Authenticated requests (set @token after login)
+# ===========================================
+
+### Get categories (pre-defined)
+GET {{baseUrl}}/categories
+Authorization: Bearer {{token}}
+
+### Create expense
+POST {{baseUrl}}/expenses
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "amount": 25.99,
+  "description": "Lunch at cafe",
+  "categoryId": "cmmh1bbj100009v0uq7o1o5ws",
+  "date": "2025-03-08",
+  "receiptUrl": "/uploads/1772933773049-563978784.jpg"
+}
+
+### Upload receipt (multipart - replace path with your receipt image)
+# In REST Client: use receipt@/absolute/path/to/receipt.jpg
+POST {{baseUrl}}/expenses/upload-receipt
+Authorization: Bearer {{token}}
+Content-Type: multipart/form-data; boundary=boundary
+
+--boundary
+Content-Disposition: form-data; name="receipt"; filename="receipt.jpg"
+Content-Type: image/jpeg
+
+< ./receipt.jpg
+--boundary--
+
+### Get all expenses (report - no filters)
+GET {{baseUrl}}/expenses
+Authorization: Bearer {{token}}
+
+### Get expenses (report - filtered by date & category)
+GET {{baseUrl}}/expenses?startDate=2025-01-01&endDate=2025-03-31&categoryId=category_id_here
+Authorization: Bearer {{token}}
+
+### Get expenses by month (for Reports)
+GET {{baseUrl}}/expenses?startDate=2025-03-01&endDate=2025-03-31
+Authorization: Bearer {{token}}
+
+### Get single expense
+GET {{baseUrl}}/expenses/expense_id_here
+Authorization: Bearer {{token}}
+
+### Update expense
+PATCH {{baseUrl}}/expenses/expense_id_here
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "amount": 29.99,
+  "description": "Updated description"
+}
+
+### Delete expense
+DELETE {{baseUrl}}/expenses/expense_id_here
+Authorization: Bearer {{token}}

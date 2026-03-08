@@ -2,6 +2,26 @@
 
 Simple expense management app — NestJS API + Expo mobile with shared TypeScript types.
 
+## Description
+
+### Features Overview
+
+- Expense Entry:
+
+  Photo Capture/Upload: Users can either take a photo of the receipt or upload an existing one.
+
+  Details Input:
+
+```
+  Date: The date of the expense.
+  Note: Any additional information about the expense.
+  Category: Pre-defined categories for easier tracking (e.g., Food, Transport, Entertainment).
+```
+
+- Report Generation:
+
+  Simple Report: Users can view expenses filtered by user, date, and category.
+
 ## Stack
 
 - **API:** NestJS, Prisma, PostgreSQL, JWT auth
@@ -73,13 +93,13 @@ For a physical device, set `EXPO_PUBLIC_API_URL` in `apps/mobile/.env` to your m
 
 ## Scripts
 
-| Command           | Description           |
-| ----------------- | --------------------- |
-| `pnpm api`        | Start API dev server  |
-| `pnpm mobile`     | Start Expo dev server |
-| `pnpm build`      | Build shared + API    |
-| `pnpm db:migrate` | Run Prisma migrations |
-| `pnpm db:studio`  | Open Prisma Studio    |
+| Command           | Description                                           |
+| ----------------- | ----------------------------------------------------- |
+| `pnpm api`        | Start API dev server                                  |
+| `pnpm mobile`     | Start Expo dev server                                 |
+| `pnpm build`      | Build shared + API                                    |
+| `pnpm db:migrate` | Run Prisma migrations                                 |
+| `pnpm db:studio`  | Open Prisma Studio                                    |
 | `pnpm clean`      | Remove build/cache dirs (dist, .expo, coverage, etc.) |
 
 ## Project structure

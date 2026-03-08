@@ -10,7 +10,11 @@ export class CreateExpenseDto {
 
   @IsOptional()
   @IsString()
-  category?: string;
+  receiptUrl?: string;
+
+  @IsOptional()
+  @IsString()
+  categoryId?: string;
 
   @IsOptional()
   @IsDateString()

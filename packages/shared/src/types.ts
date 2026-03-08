@@ -17,13 +17,21 @@ export interface RegisterDto {
   name?: string;
 }
 
+export interface Category {
+  id: string;
+  name: string;
+  slug: string;
+}
+
 export interface Expense {
   id: string;
   amount: number;
   description: string | null;
-  category: string | null;
+  receiptUrl: string | null;
   date: string;
   userId: string;
+  categoryId: string | null;
+  category: Category | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -31,18 +39,27 @@ export interface Expense {
 export interface CreateExpenseDto {
   amount: number;
   description?: string;
-  category?: string;
+  receiptUrl?: string;
+  categoryId?: string;
   date?: string;
 }
 
 export interface UpdateExpenseDto {
   amount?: number;
   description?: string;
-  category?: string;
+  receiptUrl?: string | null;
+  categoryId?: string;
   date?: string;
+}
+
+export interface ExpenseQueryDto {
+  startDate?: string;
+  endDate?: string;
+  categoryId?: string;
 }
 
 export interface AuthResponse {
   user: User;
   accessToken: string;
+  refreshToken: string;
 }

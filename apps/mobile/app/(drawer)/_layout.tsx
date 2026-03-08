@@ -4,7 +4,7 @@ import { Pressable, View, Text, StyleSheet, Platform } from "react-native";
 import { useRouter } from "expo-router";
 import { SymbolView } from "expo-symbols";
 import { Ionicons } from "@expo/vector-icons";
-import { useAuth } from "../_contexts/AuthContext";
+import { useAuth } from "@/contexts/AuthContext";
 
 import Colors from "@/constants/Colors";
 import { useColorScheme } from "@/components/useColorScheme";
@@ -48,7 +48,7 @@ function CustomDrawerContent({ navigation }: any) {
         style={styles.drawerItem}
         onPress={() => {
           closeDrawer();
-          navigation.navigate("dashboard");
+          navigation.navigate("(tabs)", { screen: "dashboard" });
         }}
       >
         <Ionicons name="stats-chart" size={22} color={Colors[colorScheme].text} />
@@ -68,7 +68,7 @@ function CustomDrawerContent({ navigation }: any) {
         style={styles.drawerItem}
         onPress={() => {
           closeDrawer();
-          navigation.navigate("reports");
+          navigation.navigate("(tabs)", { screen: "reports" });
         }}
       >
         <Ionicons name="document-text" size={22} color={Colors[colorScheme].text} />
@@ -91,7 +91,7 @@ export default function DrawerLayout() {
 
   return (
     <Drawer
-      initialRouteName="dashboard"
+      initialRouteName="(tabs)"
       drawerContent={(props: any) => <CustomDrawerContent {...props} />}
       screenOptions={{
         headerShown: true,
@@ -114,24 +114,8 @@ export default function DrawerLayout() {
       <Drawer.Screen
         name="(tabs)"
         options={{
-          drawerLabel: "Expenses",
-          title: "Expenses",
-          drawerItemStyle: { display: "none" },
-        }}
-      />
-      <Drawer.Screen
-        name="dashboard"
-        options={{
-          drawerLabel: "Dashboard",
-          title: "Dashboard",
-          drawerItemStyle: { display: "none" },
-        }}
-      />
-      <Drawer.Screen
-        name="reports"
-        options={{
-          drawerLabel: "Reports",
-          title: "Reports",
+          drawerLabel: "Home",
+          title: "Expense Tracker",
           drawerItemStyle: { display: "none" },
         }}
       />

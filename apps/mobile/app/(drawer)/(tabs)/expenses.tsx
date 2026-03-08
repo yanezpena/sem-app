@@ -18,7 +18,7 @@ import DateTimePicker from "@react-native-community/datetimepicker";
 import { Text, View } from "@/components/Themed";
 import { PhotoWithTooltip } from "@/components/PhotoWithTooltip";
 import { fetchExpenses, deleteExpense } from "@/lib/api";
-import { useAuth } from "../../_contexts/AuthContext";
+import { useAuth } from "@/contexts/AuthContext";
 import { SymbolView } from "expo-symbols";
 import type { Expense } from "shared";
 

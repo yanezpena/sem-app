@@ -8,7 +8,7 @@ import {
   Pressable,
 } from "react-native";
 import { useRouter } from "expo-router";
-import { useAuth } from "../_contexts/AuthContext";
+import { useAuth } from "@/contexts/AuthContext";
 
 export default function RegisterScreen() {
   const { register } = useAuth();
@@ -24,7 +24,7 @@ export default function RegisterScreen() {
     setLoading(true);
     try {
       await register({ email, password, name: name || undefined });
-      router.replace("/(drawer)/dashboard");
+      router.replace("/(drawer)/(tabs)/dashboard");
     } catch (e: any) {
       setError(e.message || "Registration failed");
     } finally {

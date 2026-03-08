@@ -8,7 +8,7 @@ import {
   Pressable,
 } from "react-native";
 import { useRouter } from "expo-router";
-import { useAuth } from "../_contexts/AuthContext";
+import { useAuth } from "@/contexts/AuthContext";
 
 export default function LoginScreen() {
   console.log("🟢 LoginScreen: Component rendered");
@@ -25,7 +25,7 @@ export default function LoginScreen() {
     setLoading(true);
     try {
       await login({ email, password });
-      router.replace("/(drawer)/dashboard");
+      router.replace("/(drawer)/(tabs)/dashboard");
     } catch (e: any) {
       setError(e.message || "Login failed");
     } finally {
@@ -41,7 +41,7 @@ export default function LoginScreen() {
         email: "user@example.com",
         password: "password123",
       });
-      router.replace("/(drawer)/dashboard");
+      router.replace("/(drawer)/(tabs)/dashboard");
     } catch (e: any) {
       setError(e.message || "Test login failed");
     } finally {
@@ -58,7 +58,7 @@ export default function LoginScreen() {
       console.log(
         "🔵 LoginScreen: Google login successful, navigating to tabs",
       );
-      router.replace("/(drawer)/dashboard");
+      router.replace("/(drawer)/(tabs)/dashboard");
     } catch (e: any) {
       console.log("🔴 LoginScreen: Google login failed:", e.message);
       setError(e.message || "Google login failed");
@@ -69,7 +69,7 @@ export default function LoginScreen() {
     setError(null);
     try {
       await loginWithFacebook();
-      router.replace("/(drawer)/dashboard");
+      router.replace("/(drawer)/(tabs)/dashboard");
     } catch (e: any) {
       setError(e.message || "Facebook login failed");
     }

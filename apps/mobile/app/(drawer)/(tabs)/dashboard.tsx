@@ -1,4 +1,4 @@
-import React, { useMemo } from "react";
+import React, { useMemo, useEffect } from "react";
 import {
   View,
   Text,
@@ -10,7 +10,7 @@ import {
 import { useRouter } from "expo-router";
 import { useQuery } from "@tanstack/react-query";
 
-import { useAuth } from "../_contexts/AuthContext";
+import { useAuth } from "@/contexts/AuthContext";
 import { fetchExpenses } from "@/lib/api";
 import type { Expense } from "shared";
 
@@ -154,8 +154,13 @@ export default function DashboardScreen() {
     [currExpenses]
   );
 
+  useEffect(() => {
+    if (!user) {
+      router.replace("/(auth)/login");
+    }
+  }, [user, router]);
+
   if (!user) {
-    router.replace("/(auth)/login");
     return null;
   }
 
@@ -224,10 +229,9 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     padding: 20,
     marginBottom: 20,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.06,
-    shadowRadius: 12,
+    boxShadow: [
+      { color: "rgba(0, 0, 0, 0.06)", offsetX: 0, offsetY: 2, blurRadius: 12 },
+    ],
     elevation: 4,
   },
   chartCardPrev: {

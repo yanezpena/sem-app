@@ -23,7 +23,7 @@ import { SymbolView } from "expo-symbols";
 
 import { Text as ThemedText } from "@/components/Themed";
 import { PhotoWithTooltip } from "@/components/PhotoWithTooltip";
-import { useAuth } from "../../_contexts/AuthContext";
+import { useAuth } from "@/contexts/AuthContext";
 import { createExpense, fetchCategories, uploadReceipt } from "@/lib/api";
 import type { CreateExpenseDto } from "shared";
 

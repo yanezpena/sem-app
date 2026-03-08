@@ -78,7 +78,7 @@ export function PhotoWithTooltip({
               document.body
             )
           : (
-              <View style={styles.tooltipAbove} pointerEvents="none">
+              <View style={[styles.tooltipAbove, { pointerEvents: "none" }]}>
                 <Text style={styles.tooltipText} numberOfLines={1}>
                   {tooltipText}
                 </Text>

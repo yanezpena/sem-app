@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import {
   View,
   Text,
@@ -18,7 +18,7 @@ import * as FileSystem from "expo-file-system";
 import * as Print from "expo-print";
 import { SymbolView } from "expo-symbols";
 
-import { useAuth } from "../_contexts/AuthContext";
+import { useAuth } from "@/contexts/AuthContext";
 import { fetchExpenses, fetchCategories } from "@/lib/api";
 import type { Expense } from "shared";
 
@@ -306,8 +306,13 @@ export default function ReportsScreen() {
     }
   };
 
+  useEffect(() => {
+    if (!user) {
+      router.replace("/(auth)/login");
+    }
+  }, [user, router]);
+
   if (!user) {
-    router.replace("/(auth)/login");
     return null;
   }
 

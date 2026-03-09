@@ -93,6 +93,10 @@ For a physical device, set `EXPO_PUBLIC_API_URL` in `apps/mobile/.env` to your m
 
 **App icon:** The custom icon (indigo “E” for Expense) is used in **web** (favicon), **splash screen**, and in **native builds** only. **Expo Go does not show your app icon**—it uses its own. To see the real icon, run a dev build (`cd apps/mobile && npx expo run:ios` or `expo run:android`) or build for production. To regenerate icon assets: `cd apps/mobile && pnpm generate-icon`.
 
+## Deployment
+
+See **[docs/deployment-plan.md](docs/deployment-plan.md)** for a full plan to deploy the API (NestJS + Prisma), PostgreSQL, and the Expo app to the cloud (e.g. Railway, Render, EAS).
+
 ## Scripts
 
 | Command           | Description                                           |

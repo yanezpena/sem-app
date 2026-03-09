@@ -28,8 +28,9 @@ export {
   ErrorBoundary,
 } from "expo-router";
 
+// Use route group only; (auth) defaults to login. "(auth)/login" breaks static web export.
 export const unstable_settings = {
-  initialRouteName: "(auth)/login",
+  initialRouteName: "(auth)",
 };
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.

@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: expense-tracker-uploads
+  namespace: expense-tracker
+  labels:
+    app: expense-tracker-api
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 2Gi
+  # storageClassName: standard   # set per cluster (e.g. standard, gp2, efs-sc)

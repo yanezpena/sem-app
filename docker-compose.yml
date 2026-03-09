@@ -1,0 +1,77 @@
+# Expense Tracker: API + PostgreSQL + Web app
+# Run: docker compose up -d
+# API: http://localhost:3000  |  Web: http://localhost:8080  |  DB: localhost:5433
+
+name: expense-tracker
+
+services:
+  db:
+    build:
+      context: .
+      dockerfile: Dockerfile.db
+    image: expense-tracker-db:16
+    container_name: expense-tracker-db
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-expense_tracker}
+      POSTGRES_USER: ${POSTGRES_USER:-expense}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-expense}
+    ports:
+      # 5433 on host to avoid conflict with other Postgres on 5432
+      - "${POSTGRES_PORT:-5433}:5432"
+    volumes:
+      - expense-tracker-postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-expense} -d ${POSTGRES_DB:-expense_tracker}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - expense-tracker-network
+
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: expense-tracker-api:latest
+    container_name: expense-tracker-api
+    environment:
+      PORT: 3000
+      NODE_ENV: production
+      DATABASE_URL: postgresql://${POSTGRES_USER:-expense}:${POSTGRES_PASSWORD:-expense}@db:5432/${POSTGRES_DB:-expense_tracker}?schema=public
+      JWT_SECRET: ${JWT_SECRET:-change-me-in-production}
+      BASE_URL: ${BASE_URL:-http://localhost:3000}
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-}
+    ports:
+      - "${API_PORT:-3000}:3000"
+    depends_on:
+      db:
+        condition: service_healthy
+    volumes:
+      - expense-tracker-api-uploads:/app/apps/api/uploads
+    networks:
+      - expense-tracker-network
+
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile.web
+      args:
+        # URL the browser uses to call the API (host machine)
+        EXPO_PUBLIC_API_URL: ${EXPO_PUBLIC_API_URL:-http://localhost:3000}
+    image: expense-tracker-web:latest
+    container_name: expense-tracker-web
+    ports:
+      - "${WEB_PORT:-8080}:80"
+    depends_on:
+      - api
+    networks:
+      - expense-tracker-network
+
+volumes:
+  expense-tracker-postgres-data:
+  expense-tracker-api-uploads:
+
+networks:
+  expense-tracker-network:
+    driver: bridge

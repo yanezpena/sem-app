@@ -1,0 +1,4 @@
+# Expense Tracker – PostgreSQL (named image for consistency)
+FROM postgres:16-alpine
+
+# No custom setup; use env vars from compose (POSTGRES_DB, USER, PASSWORD)

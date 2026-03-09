@@ -1,0 +1,25 @@
+# Optional: expose web app via Ingress (e.g. app.yourdomain.com).
+# Combine with API ingress or use a single Ingress with multiple hosts.
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: expense-tracker-web
+  namespace: expense-tracker
+  annotations:
+    # nginx.ingress.kubernetes.io/proxy-body-size: "10m"
+spec:
+  ingressClassName: nginx
+  rules:
+    - host: app.yourdomain.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: expense-tracker-web
+                port:
+                  number: 80
+  # tls:
+  #   - hosts: [app.yourdomain.com]
+  #     secretName: expense-tracker-web-tls

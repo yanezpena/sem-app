@@ -1,0 +1,28 @@
+# Optional: expose API via Ingress. Customize host and TLS.
+# Requires an Ingress controller (e.g. nginx-ingress, traefik).
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: expense-tracker-api
+  namespace: expense-tracker
+  annotations:
+    # nginx-ingress examples:
+    # nginx.ingress.kubernetes.io/proxy-body-size: "10m"
+    # cert-manager.io/cluster-issuer: "letsencrypt-prod"
+spec:
+  ingressClassName: nginx
+  rules:
+    - host: api.yourdomain.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: expense-tracker-api
+                port:
+                  number: 3000
+  # tls:
+  #   - hosts:
+  #       - api.yourdomain.com
+  #     secretName: expense-tracker-api-tls

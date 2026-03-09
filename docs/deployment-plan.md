@@ -49,8 +49,9 @@ flowchart TB
 | **Fly.io** | ✅ | ✅ (or external) | Volumes | Yes | Global, more control |
 | **Vercel** | ✅ Serverless | Vercel Postgres / Neon | Blob / S3 | Yes | API + web frontend |
 | **AWS / GCP** | ECS, App Engine, etc. | RDS / Cloud SQL | S3 / GCS | Pay-as-you-go | Full control |
+| **Kubernetes** | ✅ (any cluster) | External or in-cluster | PVC or S3 / R2 | Depends on cluster | Self-hosted, scalable |
 
-**Recommendation for a first deploy:** **Railway** or **Render** for API + Postgres; add **Cloudflare R2** (or S3) for receipts when you’re ready to move off local disk.
+**Recommendation for a first deploy:** **Railway** or **Render** for API + Postgres; add **Cloudflare R2** (or S3) for receipts when you’re ready to move off local disk. For **Kubernetes**, use the container and manifests in this repo (see section 10).
 
 ---
 
@@ -179,3 +180,50 @@ No database or secrets are required for CI. After you push to GitHub, enable Act
 6. Plan **Phase C** (R2/S3) when you need persistent receipt storage across deploys.
 
 After this, the app will be deployable to the cloud with a clear path to add persistent file storage and CI/CD.
+
+---
+
+## 10. Docker and Kubernetes (optional)
+
+The API is containerized and can be deployed to any Kubernetes cluster.
+
+### 10.1 Build the images
+
+From the repo root:
+
+**API:**
+```bash
+docker build -t expense-tracker-api:latest .
+```
+
+**Web app** (Expo static export + nginx; set API URL at build time):
+```bash
+docker build -f Dockerfile.web --build-arg EXPO_PUBLIC_API_URL=https://your-api.example.com -t expense-tracker-web:latest .
+```
+
+Use your registry for production (e.g. `your-registry.io/expense-tracker-api:v1.0.0`).
+
+### 10.2 Kubernetes manifests
+
+In **`k8s/`** you’ll find:
+
+**API:** namespace, configmap, secret, pvc, deployment, service, ingress.example, migration-job.example  
+
+**Web app:** **web-deployment.yaml** (Deployment + Service for the static site), **web-ingress.yaml.example**
+
+Apply order: namespace → configmap → secret → pvc → deployment → service (and optionally ingress). Then, if using the web app: **web-deployment.yaml** (and optionally web-ingress). See **`k8s/README.md`** for step-by-step commands and migration options.
+
+### 10.3 Docker Compose (local or single-host)
+
+For a single-machine run (API + PostgreSQL + web app in containers):
+
+```bash
+cp docker-compose.env.example .env
+docker compose up -d --build
+```
+
+Then run migrations once (see `k8s/README.md` or use `DATABASE_URL=... pnpm db:deploy`). API at http://localhost:3000, web at http://localhost:8080. Configure `.env` for `JWT_SECRET`, `BASE_URL`, and OAuth as needed.
+
+### 10.4 Database and migrations
+
+PostgreSQL can run outside the cluster (e.g. managed RDS, Cloud SQL) or inside (e.g. StatefulSet or Helm). Set `DATABASE_URL` in the Secret. Run migrations once (from your machine with `kubectl run` and the secret, or from CI with `pnpm db:deploy` and the production DB URL).

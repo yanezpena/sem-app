@@ -1,0 +1,35 @@
+# Dependencies
+node_modules
+**/node_modules
+.pnpm-store
+
+# Build / tooling
+apps/api/dist
+apps/api/coverage
+packages/shared/dist
+apps/mobile/.expo
+apps/mobile/dist
+apps/mobile/web-build
+.expo
+*.tsbuildinfo
+
+# Git and IDE
+.git
+.github
+.gitignore
+.cursor
+.vscode
+*.md
+!README.md
+
+# Env and local
+.env
+.env.*
+!.env.example
+apps/api/uploads/*
+!apps/api/uploads/.gitkeep
+
+# Data and misc
+data
+*.log
+.DS_Store

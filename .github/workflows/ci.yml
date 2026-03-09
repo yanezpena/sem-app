@@ -1,17 +1,32 @@
-# CI: install, build, lint, and test on every push and PR
+# CI: manual run, configured by environment (secrets/vars from GitHub Environment)
 name: CI
 
 on:
-  push:
-    branches: [main, master]
-  pull_request:
-    branches: [main, master]
+  workflow_dispatch:
+    inputs:
+      branch:
+        description: "Branch to run CI / deploy"
+        required: true
+        default: "main"
+        type: string
+      environment:
+        description: "Environment to use (configures secrets/vars from GitHub Environment)"
+        required: true
+        default: "ci"
+        type: choice
+        options:
+          - ci
+          - staging
+          - production
 
 jobs:
   ci:
     runs-on: ubuntu-latest
+    environment: ${{ inputs.environment }}
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.branch }}
 
       - name: Setup Node.js
         uses: actions/setup-node@v4

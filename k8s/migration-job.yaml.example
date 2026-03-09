@@ -1,0 +1,28 @@
+# One-time or pre-deploy job to run Prisma migrations.
+# Run before or after deploying the API (e.g. in CI or manually).
+# Requires same DATABASE_URL secret and an image that has prisma + migrations.
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: expense-tracker-migrate
+  namespace: expense-tracker
+  labels:
+    app: expense-tracker-api
+spec:
+  ttlSecondsAfterFinished: 300
+  template:
+    spec:
+      restartPolicy: OnFailure
+      containers:
+        - name: migrate
+          image: expense-tracker-api:latest
+          imagePullPolicy: IfNotPresent
+          workingDir: /app/apps/api
+          command: ["sh", "-c", "npx prisma migrate deploy"]
+          envFrom:
+            - secretRef:
+                name: expense-tracker-api-secret
+          # Or use a dedicated migration image with only Node + Prisma CLI
+---
+# Simpler: run migrations from your machine before deploy:
+#   kubectl run -it --rm migrate --image=expense-tracker-api:latest --restart=Never -n expense-tracker --env="DATABASE_URL=..." -- npx prisma migrate deploy

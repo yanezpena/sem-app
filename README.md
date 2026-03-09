@@ -38,9 +38,32 @@ Simple expense management app — NestJS API + Expo mobile with shared TypeScrip
 
 - Node.js 18+
 - pnpm 9+
-- Docker (for PostgreSQL)
+- Docker (for PostgreSQL, or use Docker Compose for full stack)
 
 ## Setup
+
+### Option A: Run with Docker Compose (API + DB + Web)
+
+Runs PostgreSQL, the API, and the web app in containers:
+
+```bash
+cp docker-compose.env.example .env   # optional: edit .env for JWT_SECRET, etc.
+docker compose up -d --build
+```
+
+Then run migrations once (from your machine; DB is on host port **5433** to avoid conflict with other Postgres):
+
+```bash
+DATABASE_URL="postgresql://expense:expense@localhost:5433/expense_tracker?schema=public" pnpm db:deploy
+```
+
+- **API:** http://localhost:3000  
+- **Web app:** http://localhost:8080  
+- **PostgreSQL:** localhost:**5433** (user `expense`, password `expense`, db `expense_tracker`)
+
+To seed categories: `cd apps/api && DATABASE_URL="postgresql://expense:expense@localhost:5433/expense_tracker?schema=public" pnpm exec prisma db seed`
+
+### Option B: Local dev (Node + Docker for DB only)
 
 ### 1. Install dependencies
 
@@ -97,6 +120,8 @@ For a physical device, set `EXPO_PUBLIC_API_URL` in `apps/mobile/.env` to your m
 
 See **[docs/deployment-plan.md](docs/deployment-plan.md)** for a full plan to deploy the API (NestJS + Prisma), PostgreSQL, and the Expo app to the cloud (e.g. Railway, Render, EAS).
 
+**Docker / Kubernetes:** The API has a **Dockerfile** and the web app has **Dockerfile.web** at the repo root; **Kubernetes manifests** are in **`k8s/`** (API + web). See **`k8s/README.md`** for build and deploy steps.
+
 ## Scripts
 
 | Command           | Description                                           |
@@ -108,6 +133,7 @@ See **[docs/deployment-plan.md](docs/deployment-plan.md)** for a full plan to de
 | `pnpm db:studio`  | Open Prisma Studio                                    |
 | `pnpm clean`      | Remove build/cache dirs (dist, .expo, coverage, etc.) |
 | `cd apps/mobile && pnpm generate-icon` | Regenerate app icon assets (E logo)   |
+| `docker compose up -d --build`         | Run API + DB + web with Docker Compose |
 
 ## Project structure
 

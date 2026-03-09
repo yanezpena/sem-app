@@ -91,6 +91,8 @@ pnpm mobile
 
 For a physical device, set `EXPO_PUBLIC_API_URL` in `apps/mobile/.env` to your machine's IP (e.g. `http://192.168.1.100:3000`).
 
+**App icon:** The custom icon (indigo “E” for Expense) is used in **web** (favicon), **splash screen**, and in **native builds** only. **Expo Go does not show your app icon**—it uses its own. To see the real icon, run a dev build (`cd apps/mobile && npx expo run:ios` or `expo run:android`) or build for production. To regenerate icon assets: `cd apps/mobile && pnpm generate-icon`.
+
 ## Scripts
 
 | Command           | Description                                           |
@@ -101,6 +103,7 @@ For a physical device, set `EXPO_PUBLIC_API_URL` in `apps/mobile/.env` to your m
 | `pnpm db:migrate` | Run Prisma migrations                                 |
 | `pnpm db:studio`  | Open Prisma Studio                                    |
 | `pnpm clean`      | Remove build/cache dirs (dist, .expo, coverage, etc.) |
+| `cd apps/mobile && pnpm generate-icon` | Regenerate app icon assets (E logo)   |
 
 ## Project structure
 

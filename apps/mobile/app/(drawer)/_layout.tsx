@@ -1,14 +1,16 @@
 import React from "react";
 import { Drawer } from "expo-router/drawer";
 import type { DrawerContentComponentProps } from "@react-navigation/drawer";
-import { Pressable, View, Text, StyleSheet, Platform } from "react-native";
+import { Pressable, View, Text, StyleSheet, Platform, Image } from "react-native";
 import { useRouter } from "expo-router";
-import { SymbolView } from "expo-symbols";
 import { Ionicons } from "@expo/vector-icons";
 import { useAuth } from "@/contexts/AuthContext";
 
 import Colors from "@/constants/Colors";
+import { Font } from "@/constants/Theme";
 import { useColorScheme } from "@/components/useColorScheme";
+
+const AppIcon = require("../../assets/images/icon.png");
 
 function CustomDrawerContent({ navigation }: DrawerContentComponentProps) {
   const { logout } = useAuth();
@@ -25,12 +27,8 @@ function CustomDrawerContent({ navigation }: DrawerContentComponentProps) {
 
   return (
     <View style={[styles.drawerContent, { backgroundColor: Colors[colorScheme].background }]}>
-      <View style={styles.drawerHeader}>
-        <SymbolView
-          name={{ ios: "banknote", android: "attach_money", web: "attach_money" }}
-          tintColor={Colors[colorScheme].tint}
-          size={40}
-        />
+      <View style={[styles.drawerHeader, { borderBottomColor: Colors[colorScheme].border }]}>
+        <Image source={AppIcon} style={styles.drawerIcon} resizeMode="contain" />
         <View style={styles.drawerTitleRow}>
           <Text style={[styles.drawerTitle, { color: Colors[colorScheme].text }]}>Expense Tracker</Text>
         </View>
@@ -75,13 +73,23 @@ function CustomDrawerContent({ navigation }: DrawerContentComponentProps) {
         <Ionicons name="document-text" size={22} color={Colors[colorScheme].text} />
         <Text style={[styles.drawerItemText, { color: Colors[colorScheme].text }]}>Reports</Text>
       </Pressable>
+      <Pressable
+        style={styles.drawerItem}
+        onPress={() => {
+          closeDrawer();
+          navigation.navigate("(tabs)", { screen: "categories" });
+        }}
+      >
+        <Ionicons name="folder-open" size={22} color={Colors[colorScheme].text} />
+        <Text style={[styles.drawerItemText, { color: Colors[colorScheme].text }]}>Categories</Text>
+      </Pressable>
       <View style={styles.drawerSpacer} />
       <Pressable
-        style={[styles.drawerItem, styles.drawerItemLogout]}
+        style={[styles.drawerItem, styles.drawerItemLogout, { borderTopColor: Colors[colorScheme].border }]}
         onPress={handleLogout}
       >
-        <Ionicons name="log-out" size={22} color="#dc2626" />
-        <Text style={[styles.drawerItemText, { color: "#dc2626" }]}>Log out</Text>
+        <Ionicons name="log-out" size={22} color={Colors[colorScheme].error} />
+        <Text style={[styles.drawerItemText, { color: Colors[colorScheme].error }]}>Log out</Text>
       </Pressable>
     </View>
   );
@@ -100,11 +108,7 @@ export default function DrawerLayout() {
         headerTintColor: Colors[colorScheme].text,
         headerTitle: () => (
           <View style={styles.headerTitle}>
-            <SymbolView
-              name={{ ios: "banknote.fill", android: "attach_money", web: "attach_money" }}
-              tintColor={Colors[colorScheme].tint}
-              size={24}
-            />
+            <Image source={AppIcon} style={styles.headerIcon} resizeMode="contain" />
             <Text style={[styles.headerTitleText, { color: Colors[colorScheme].text }]}>Expense Tracker</Text>
           </View>
         ),
@@ -134,7 +138,8 @@ export default function DrawerLayout() {
 
 const styles = StyleSheet.create({
   headerTitle: { flexDirection: "row", alignItems: "center", gap: 8 },
-  headerTitleText: { fontSize: 18, fontWeight: "600" },
+  headerIcon: { width: 28, height: 28 },
+  headerTitleText: { fontSize: 18, fontFamily: Font.semiBold },
   drawerContent: { flex: 1, paddingTop: Platform.OS === "ios" ? 48 : 24 },
   drawerHeader: {
     flexDirection: "row",
@@ -142,10 +147,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingVertical: 16,
     borderBottomWidth: 1,
-    borderBottomColor: "#e5e7eb",
   },
+  drawerIcon: { width: 40, height: 40 },
   drawerTitleRow: { marginLeft: 12, flex: 1 },
-  drawerTitle: { fontSize: 18, fontWeight: "700" },
+  drawerTitle: { fontSize: 18, fontFamily: Font.bold },
   drawerItem: {
     flexDirection: "row",
     alignItems: "center",
@@ -153,7 +158,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     gap: 16,
   },
-  drawerItemText: { fontSize: 16, fontWeight: "500" },
+  drawerItemText: { fontSize: 16, fontFamily: Font.medium },
   drawerSpacer: { flex: 1 },
-  drawerItemLogout: { borderTopWidth: 1, borderTopColor: "#e5e7eb" },
+  drawerItemLogout: { borderTopWidth: 1 },
 });

@@ -23,6 +23,14 @@ export interface Category {
   slug: string;
 }
 
+export interface CreateCategoryDto {
+  name: string;
+}
+
+export interface UpdateCategoryDto {
+  name?: string;
+}
+
 export interface Expense {
   id: string;
   amount: number;

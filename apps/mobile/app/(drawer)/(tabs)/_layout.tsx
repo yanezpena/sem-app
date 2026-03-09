@@ -57,6 +57,15 @@ export default function TabLayout() {
           ),
         }}
       />
+      <Tabs.Screen
+        name="categories"
+        options={{
+          title: "Categories",
+          tabBarIcon: ({ color }) => (
+            <Ionicons name="folder-open" size={24} color={color} />
+          ),
+        }}
+      />
     </Tabs>
   );
 }

@@ -7,6 +7,8 @@ import type {
   CreateExpenseDto,
   UpdateExpenseDto,
   Category,
+  CreateCategoryDto,
+  UpdateCategoryDto,
 } from "shared";
 
 const API_URL = process.env.EXPO_PUBLIC_API_URL ?? "http://localhost:3000";
@@ -178,6 +180,60 @@ export async function fetchCategories(token: string): Promise<Category[]> {
     await throwFriendlyError(res, "Failed to fetch categories");
   }
   return res.json();
+}
+
+export async function fetchCategory(
+  token: string,
+  id: string
+): Promise<Category & { _count?: { expenses: number } }> {
+  const res = await fetch(`${API_URL}/categories/${id}`, {
+    headers: authHeaders(token),
+  });
+  if (!res.ok) {
+    await throwFriendlyError(res, "Failed to fetch category");
+  }
+  return res.json();
+}
+
+export async function createCategory(
+  token: string,
+  data: CreateCategoryDto
+): Promise<Category> {
+  const res = await fetch(`${API_URL}/categories`, {
+    method: "POST",
+    headers: authHeaders(token),
+    body: JSON.stringify(data),
+  });
+  if (!res.ok) {
+    await throwFriendlyError(res, "Failed to create category");
+  }
+  return res.json();
+}
+
+export async function updateCategory(
+  token: string,
+  id: string,
+  data: UpdateCategoryDto
+): Promise<Category> {
+  const res = await fetch(`${API_URL}/categories/${id}`, {
+    method: "PATCH",
+    headers: authHeaders(token),
+    body: JSON.stringify(data),
+  });
+  if (!res.ok) {
+    await throwFriendlyError(res, "Failed to update category");
+  }
+  return res.json();
+}
+
+export async function deleteCategory(token: string, id: string): Promise<void> {
+  const res = await fetch(`${API_URL}/categories/${id}`, {
+    method: "DELETE",
+    headers: authHeaders(token),
+  });
+  if (!res.ok) {
+    await throwFriendlyError(res, "Failed to delete category");
+  }
 }
 
 export async function uploadReceipt(

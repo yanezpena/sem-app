@@ -9,10 +9,15 @@ import {
 } from "react-native";
 import { useRouter } from "expo-router";
 import { useAuth } from "@/contexts/AuthContext";
+import Colors from "@/constants/Colors";
+import { Font } from "@/constants/Theme";
+import { useColorScheme } from "@/components/useColorScheme";
 
 export default function LoginScreen() {
   const { login, loginWithGoogle, loginWithFacebook } = useAuth();
   const router = useRouter();
+  const colorScheme = useColorScheme();
+  const colors = Colors[colorScheme];
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -68,30 +73,32 @@ export default function LoginScreen() {
   };
 
   return (
-    <View style={styles.outerContainer}>
+    <View style={[styles.outerContainer, { backgroundColor: colors.background }]}>
       <View style={styles.container}>
-        <Text style={styles.title}>Sign In</Text>
+        <Text style={[styles.title, { color: colors.text }]}>Sign In</Text>
         <TextInput
-          style={styles.input}
+          style={[styles.input, { borderColor: colors.border, color: colors.text }]}
           placeholder="Email"
+          placeholderTextColor={colors.textMuted}
           value={email}
           onChangeText={setEmail}
           keyboardType="email-address"
           autoCapitalize="none"
         />
         <TextInput
-          style={styles.input}
+          style={[styles.input, { borderColor: colors.border, color: colors.text }]}
           placeholder="Password"
+          placeholderTextColor={colors.textMuted}
           value={password}
           onChangeText={setPassword}
           secureTextEntry
         />
         {error && (
-          <View style={styles.errorBox}>
-            <Text style={styles.errorTitle}>Please check the following:</Text>
+          <View style={[styles.errorBox, { backgroundColor: colorScheme === "light" ? "#FEE2E2" : "#7f1d1d" }]}>
+            <Text style={[styles.errorTitle, { color: colors.error }]}>Please check the following:</Text>
             {error.split("\n").map((line, idx) =>
               line.trim() ? (
-                <Text key={idx} style={styles.errorText}>
+                <Text key={idx} style={[styles.errorText, { color: colors.error }]}>
                   • {line.trim().replace(/\.$/, "")}
                 </Text>
               ) : null,
@@ -104,7 +111,7 @@ export default function LoginScreen() {
           disabled={loading}
         />
         <View style={styles.divider}>
-          <Text style={styles.dividerText}>or</Text>
+          <Text style={[styles.dividerText, { color: colors.textMuted }]}>or</Text>
         </View>
         <Button
           title="Continue with Google"
@@ -122,13 +129,13 @@ export default function LoginScreen() {
             onPress={handleTestLogin}
             disabled={loading}
           >
-            <Text style={styles.testLoginText}>Test login (no password)</Text>
+            <Text style={[styles.testLoginText, { color: "#92400e" }]}>Test login (no password)</Text>
           </Pressable>
         )}
         <View style={styles.footer}>
-          <Text>New here?</Text>
+          <Text style={{ color: colors.textSecondary }}>New here?</Text>
           <Pressable onPress={() => router.push("/(auth)/register" as const)}>
-            <Text style={styles.link}> Create an account</Text>
+            <Text style={[styles.link, { color: colors.tint }]}> Create an account</Text>
           </Pressable>
         </View>
       </View>
@@ -149,45 +156,42 @@ const styles = StyleSheet.create({
     padding: 24,
   },
   title: {
-    fontSize: 32,
-    fontWeight: "bold",
+    fontSize: 28,
+    fontFamily: Font.bold,
     marginBottom: 24,
     textAlign: "center",
   },
   input: {
     borderWidth: 1,
-    borderColor: "#ccc",
-    borderRadius: 4,
-    padding: 12,
+    borderRadius: 10,
+    padding: 14,
     marginBottom: 16,
+    fontSize: 16,
   },
   errorBox: {
-    backgroundColor: "#FEE2E2",
-    borderRadius: 6,
+    borderRadius: 10,
     padding: 12,
     marginBottom: 16,
   },
   errorTitle: {
-    color: "#991B1B",
-    fontWeight: "600",
+    fontFamily: Font.semiBold,
     marginBottom: 4,
     textAlign: "left",
+    fontSize: 14,
   },
   errorText: {
-    color: "#B91C1C",
     fontSize: 14,
     lineHeight: 20,
   },
   divider: { marginVertical: 20, alignItems: "center" },
-  dividerText: { color: "#666", fontSize: 14 },
+  dividerText: { fontSize: 14, fontFamily: Font.medium },
   testLoginBtn: {
     marginTop: 16,
     padding: 12,
-    backgroundColor: "#fef3c7",
-    borderRadius: 8,
+    borderRadius: 10,
     alignItems: "center",
   },
-  testLoginText: { color: "#92400e", fontSize: 14, fontWeight: "500" },
+  testLoginText: { fontSize: 14, fontFamily: Font.medium },
   footer: { flexDirection: "row", justifyContent: "center", marginTop: 24 },
-  link: { color: "#0066cc" },
+  link: { fontFamily: Font.semiBold },
 });

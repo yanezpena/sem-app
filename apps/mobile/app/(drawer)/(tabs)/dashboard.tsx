@@ -12,6 +12,9 @@ import { useRouter } from "expo-router";
 import { useQuery } from "@tanstack/react-query";
 
 import { useAuth } from "@/contexts/AuthContext";
+import Colors from "@/constants/Colors";
+import { Font } from "@/constants/Theme";
+import { useColorScheme } from "@/components/useColorScheme";
 import { fetchExpenses } from "@/lib/api";
 import { formatAmount, getYearRange, MONTH_NAMES } from "@/lib/formatters";
 import type { Expense } from "shared";
@@ -32,11 +35,13 @@ function MonthBarChart({
   maxVal,
   color,
   barWidth,
+  barLabelColor,
 }: {
   data: number[];
   maxVal: number;
   color: string;
   barWidth: number;
+  barLabelColor: string;
 }) {
   return (
     <View style={chartStyles.container}>
@@ -56,7 +61,7 @@ function MonthBarChart({
                   },
                 ]}
               />
-              <Text style={chartStyles.barLabel}>{label}</Text>
+              <Text style={[chartStyles.barLabel, { color: barLabelColor }]}>{label}</Text>
             </View>
           );
         })}
@@ -85,8 +90,7 @@ const chartStyles = StyleSheet.create({
   },
   barLabel: {
     fontSize: 10,
-    fontWeight: "600",
-    color: "#94a3b8",
+    fontFamily: Font.semiBold,
     marginTop: 6,
   },
 });
@@ -95,6 +99,8 @@ export default function DashboardScreen() {
   const { user, token } = useAuth();
   const router = useRouter();
   const { width } = useWindowDimensions();
+  const colorScheme = useColorScheme();
+  const colors = Colors[colorScheme];
   const barWidth = Math.max((width - 56) / 12 - 4, 14);
 
   const now = new Date();
@@ -166,7 +172,7 @@ export default function DashboardScreen() {
   if (isLoading) {
     return (
       <View style={styles.centered}>
-        <ActivityIndicator size="large" color="#6366f1" accessibilityLabel="Loading dashboard" />
+        <ActivityIndicator size="large" color={colors.tint} accessibilityLabel="Loading dashboard" />
       </View>
     );
   }
@@ -174,11 +180,11 @@ export default function DashboardScreen() {
   if (hasError) {
     return (
       <View style={styles.centered}>
-        <Text style={styles.error}>
+        <Text style={[styles.error, { color: colors.error }]}>
           {errorMsg instanceof Error ? errorMsg.message : "Could not load dashboard."}
         </Text>
         <Pressable
-          style={styles.retryBtn}
+          style={[styles.retryBtn, { backgroundColor: colors.surface }]}
           onPress={() => {
             refetchPrev();
             refetchCurr();
@@ -186,7 +192,7 @@ export default function DashboardScreen() {
           accessibilityRole="button"
           accessibilityLabel="Retry"
         >
-          <Text style={styles.retryText}>Try again</Text>
+          <Text style={[styles.retryText, { color: colors.tint }]}>Try again</Text>
         </Pressable>
       </View>
     );
@@ -194,34 +200,36 @@ export default function DashboardScreen() {
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-      <Text style={styles.title}>Expense Dashboard</Text>
-      <Text style={styles.subtitle}>Monthly totals by year</Text>
+      <Text style={[styles.title, { color: colors.text }]}>Expense Dashboard</Text>
+      <Text style={[styles.subtitle, { color: colors.textSecondary }]}>Monthly totals by year</Text>
 
       {/* Previous year chart */}
-      <View style={[styles.chartCard, styles.chartCardPrev]}>
+      <View style={[styles.chartCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
         <View style={styles.chartHeader}>
-          <Text style={styles.chartTitle}>{previousYear}</Text>
-          <Text style={[styles.chartTotal, styles.chartTotalPrev]}>{formatAmount(prevTotal)}</Text>
+          <Text style={[styles.chartTitle, { color: colors.text }]}>{previousYear}</Text>
+          <Text style={[styles.chartTotal, { color: colors.textSecondary }]}>{formatAmount(prevTotal)}</Text>
         </View>
         <MonthBarChart
           data={prevTotals}
           maxVal={prevMax}
-          color="#64748b"
+          color={colors.textMuted}
           barWidth={barWidth}
+          barLabelColor={colors.textMuted}
         />
       </View>
 
       {/* Current year chart */}
-      <View style={[styles.chartCard, styles.chartCardCurr]}>
+      <View style={[styles.chartCard, { backgroundColor: colors.surfaceElevated, borderColor: colors.tint }]}>
         <View style={styles.chartHeader}>
-          <Text style={styles.chartTitle}>{currentYear}</Text>
-          <Text style={styles.chartTotal}>{formatAmount(currTotal)}</Text>
+          <Text style={[styles.chartTitle, { color: colors.text }]}>{currentYear}</Text>
+          <Text style={[styles.chartTotal, { color: colors.tint }]}>{formatAmount(currTotal)}</Text>
         </View>
         <MonthBarChart
           data={currTotals}
           maxVal={currMax}
-          color="#6366f1"
+          color={colors.tint}
           barWidth={barWidth}
+          barLabelColor={colors.textMuted}
         />
       </View>
     </ScrollView>
@@ -234,33 +242,24 @@ const styles = StyleSheet.create({
   centered: { flex: 1, alignItems: "center", justifyContent: "center" },
   title: {
     fontSize: 26,
-    fontWeight: "800",
+    fontFamily: Font.bold,
     marginBottom: 4,
     letterSpacing: -0.5,
   },
   subtitle: {
     fontSize: 15,
-    color: "#64748b",
+    fontFamily: Font.regular,
     marginBottom: 24,
   },
   chartCard: {
     borderRadius: 20,
     padding: 20,
     marginBottom: 20,
+    borderWidth: 1,
     boxShadow: [
       { color: "rgba(0, 0, 0, 0.06)", offsetX: 0, offsetY: 2, blurRadius: 12 },
     ],
     elevation: 4,
-  },
-  chartCardPrev: {
-    backgroundColor: "#f8fafc",
-    borderWidth: 1,
-    borderColor: "#e2e8f0",
-  },
-  chartCardCurr: {
-    backgroundColor: "#eff6ff",
-    borderWidth: 1,
-    borderColor: "#bfdbfe",
   },
   chartHeader: {
     flexDirection: "row",
@@ -270,18 +269,13 @@ const styles = StyleSheet.create({
   },
   chartTitle: {
     fontSize: 18,
-    fontWeight: "700",
-    color: "#334155",
+    fontFamily: Font.bold,
   },
   chartTotal: {
     fontSize: 20,
-    fontWeight: "800",
-    color: "#6366f1",
+    fontFamily: Font.bold,
   },
-  chartTotalPrev: {
-    color: "#475569",
-  },
-  error: { color: "#c00", textAlign: "center" },
-  retryBtn: { marginTop: 16, padding: 12, backgroundColor: "#eef2ff", borderRadius: 8 },
-  retryText: { color: "#6366f1", fontSize: 16, fontWeight: "600" },
+  error: { textAlign: "center" },
+  retryBtn: { marginTop: 16, padding: 12, borderRadius: 8 },
+  retryText: { fontSize: 16, fontFamily: Font.semiBold },
 });

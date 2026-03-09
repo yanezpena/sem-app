@@ -6,9 +6,11 @@
     "start": "expo start",
     "android": "expo start --android",
     "ios": "expo start --ios",
-    "web": "expo start --web"
+    "web": "expo start --web",
+    "generate-icon": "node scripts/generate-app-icon.mjs"
   },
   "dependencies": {
+    "@expo-google-fonts/inter": "^0.4.2",
     "@react-native-community/datetimepicker": "8.6.0",
     "@react-navigation/drawer": "^7.9.4",
     "@react-navigation/native": "^7.1.28",
@@ -45,6 +47,7 @@
   },
   "devDependencies": {
     "@types/react": "~19.2.2",
+    "sharp": "^0.33.5",
     "typescript": "~5.9.2"
   },
   "private": true

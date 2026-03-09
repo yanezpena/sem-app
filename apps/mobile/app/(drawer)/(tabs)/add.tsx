@@ -24,6 +24,9 @@ import { SymbolView } from "expo-symbols";
 import { Text as ThemedText } from "@/components/Themed";
 import { PhotoWithTooltip } from "@/components/PhotoWithTooltip";
 import { useAuth } from "@/contexts/AuthContext";
+import Colors from "@/constants/Colors";
+import { Font } from "@/constants/Theme";
+import { useColorScheme } from "@/components/useColorScheme";
 import { createExpense, fetchCategories, uploadReceipt } from "@/lib/api";
 import { resolveReceiptUrl } from "@/lib/utils";
 import type { CreateExpenseDto } from "shared";
@@ -32,6 +35,8 @@ export default function AddExpenseScreen() {
   const { user, token } = useAuth();
   const router = useRouter();
   const queryClient = useQueryClient();
+  const colorScheme = useColorScheme();
+  const colors = Colors[colorScheme];
 
   const [amount, setAmount] = useState("");
   const [note, setNote] = useState("");
@@ -135,14 +140,14 @@ export default function AddExpenseScreen() {
         showsVerticalScrollIndicator={false}
       >
         <ThemedText style={styles.screenTitle}>Add Expense</ThemedText>
-        <ThemedText style={styles.screenSubtitle}>
+        <ThemedText style={[styles.screenSubtitle, { color: colors.textSecondary }]}>
           Amount, date, and category required. Notes and receipt optional.
         </ThemedText>
 
         {/* Receipt Card */}
-        <View style={styles.card}>
+        <View style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.border }]}>
           <View style={styles.cardHeader}>
-            <SymbolView name="camera" tintColor="#6366f1" size={20} />
+            <SymbolView name="camera" tintColor={colors.tint} size={20} />
             <ThemedText style={styles.cardTitle}>Receipt (optional)</ThemedText>
           </View>
           {receiptUri || receiptUrl ? (
@@ -160,7 +165,7 @@ export default function AddExpenseScreen() {
                 </View>
               ) : (
                 <Pressable
-                  style={styles.removeBtn}
+                  style={[styles.removeBtn, { backgroundColor: colors.error }]}
                   onPress={() => {
                     setReceiptUri(null);
                     setReceiptUrl(null);
@@ -173,58 +178,58 @@ export default function AddExpenseScreen() {
           ) : null}
           {!(receiptUri || receiptUrl) ? (
             <View style={styles.receiptButtons}>
-              <Pressable style={styles.receiptBtn} onPress={() => pickImage(true)}>
-                <SymbolView name="camera.fill" tintColor="#6366f1" size={28} />
-                <RNText style={styles.receiptBtnText}>Take Photo</RNText>
+              <Pressable style={[styles.receiptBtn, { borderColor: colors.tint }]} onPress={() => pickImage(true)}>
+                <SymbolView name="camera.fill" tintColor={colors.tint} size={28} />
+                <RNText style={[styles.receiptBtnText, { color: colors.tint }]}>Take Photo</RNText>
               </Pressable>
-              <Pressable style={styles.receiptBtn} onPress={() => pickImage(false)}>
-                <SymbolView name="photo" tintColor="#6366f1" size={28} />
-                <RNText style={styles.receiptBtnText}>Upload</RNText>
+              <Pressable style={[styles.receiptBtn, { borderColor: colors.tint }]} onPress={() => pickImage(false)}>
+                <SymbolView name="photo" tintColor={colors.tint} size={28} />
+                <RNText style={[styles.receiptBtnText, { color: colors.tint }]}>Upload</RNText>
               </Pressable>
             </View>
           ) : null}
         </View>
 
         {/* Amount Card */}
-        <View style={styles.card}>
+        <View style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.border }]}>
           <View style={styles.cardHeader}>
-            <SymbolView name="dollarsign" tintColor="#10b981" size={20} />
+            <SymbolView name="dollarsign" tintColor={colors.success} size={20} />
             <ThemedText style={styles.cardTitle}>Amount *</ThemedText>
           </View>
           <TextInput
-            style={styles.amountInput}
+            style={[styles.amountInput, { color: colors.text, borderColor: colors.border }]}
             placeholder="0.00"
-            placeholderTextColor="#94a3b8"
+            placeholderTextColor={colors.textMuted}
             value={amount}
             onChangeText={(v) => { setAmount(v); setAmountError(null); }}
             keyboardType="decimal-pad"
             accessibilityLabel="Amount"
           />
-          {amountError && <ThemedText style={styles.fieldError}>{amountError}</ThemedText>}
+          {amountError && <ThemedText style={[styles.fieldError, { color: colors.error }]}>{amountError}</ThemedText>}
         </View>
 
         {/* Date Card */}
-        <View style={styles.card}>
+        <View style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.border }]}>
           <View style={styles.cardHeader}>
-            <SymbolView name="calendar" tintColor="#f59e0b" size={20} />
+            <SymbolView name="calendar" tintColor={colors.warning} size={20} />
             <ThemedText style={styles.cardTitle}>Date *</ThemedText>
           </View>
           <View style={styles.dateRow}>
             <TextInput
-              style={styles.dateInput}
+              style={[styles.dateInput, { color: colors.text, borderColor: colors.border }]}
               value={date.toISOString().split("T")[0]}
               onChangeText={(text) => {
                 const parsed = new Date(text);
                 if (!isNaN(parsed.getTime())) setDate(parsed);
               }}
               placeholder="YYYY-MM-DD"
-              placeholderTextColor="#94a3b8"
+              placeholderTextColor={colors.textMuted}
             />
             <Pressable
-              style={styles.datePickerBtn}
+              style={[styles.datePickerBtn, { backgroundColor: colors.tint }]}
               onPress={() => setShowDatePicker(true)}
             >
-              <SymbolView name="calendar" tintColor="#6366f1" size={20} />
+              <SymbolView name="calendar" tintColor="#fff" size={20} />
               <RNText style={styles.datePickerBtnText}>Pick</RNText>
             </Pressable>
           </View>
@@ -305,15 +310,15 @@ export default function AddExpenseScreen() {
         </View>
 
         {/* Note Card */}
-        <View style={styles.card}>
+        <View style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.border }]}>
           <View style={styles.cardHeader}>
-            <SymbolView name="note.text" tintColor="#8b5cf6" size={20} />
+            <SymbolView name="note.text" tintColor={colors.tint} size={20} />
             <ThemedText style={styles.cardTitle}>Note (optional)</ThemedText>
           </View>
           <TextInput
-            style={[styles.input, styles.noteInput]}
+            style={[styles.input, styles.noteInput, { color: colors.text, borderColor: colors.border }]}
             placeholder="Any additional information"
-            placeholderTextColor="#94a3b8"
+            placeholderTextColor={colors.textMuted}
             value={note}
             onChangeText={setNote}
             multiline
@@ -321,15 +326,15 @@ export default function AddExpenseScreen() {
         </View>
 
         {/* Category Card */}
-        <View style={styles.card}>
+        <View style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.border }]}>
           <View style={styles.cardHeader}>
-            <SymbolView name="tag" tintColor="#ec4899" size={20} />
+            <SymbolView name="tag" tintColor={colors.tint} size={20} />
             <ThemedText style={styles.cardTitle}>Category *</ThemedText>
           </View>
           {categoriesLoading ? (
             <View style={styles.loadingCategories}>
-              <ActivityIndicator size="small" />
-              <ThemedText style={styles.loadingText}>Loading categories…</ThemedText>
+              <ActivityIndicator size="small" color={colors.tint} />
+              <ThemedText style={[styles.loadingText, { color: colors.textSecondary }]}>Loading categories…</ThemedText>
             </View>
           ) : (
             <View style={styles.categoryRow}>
@@ -338,7 +343,8 @@ export default function AddExpenseScreen() {
                   key={cat.id}
                   style={[
                     styles.categoryChip,
-                    categoryId === cat.id && styles.categoryChipSelected,
+                    { borderColor: colors.border },
+                    categoryId === cat.id && [styles.categoryChipSelected, { backgroundColor: colors.tint }],
                   ]}
                   onPress={() => {
                     setCategoryId(categoryId === cat.id ? null : cat.id);
@@ -349,7 +355,7 @@ export default function AddExpenseScreen() {
                     style={
                       categoryId === cat.id
                         ? styles.categoryChipTextSelected
-                        : styles.categoryChipText
+                        : [styles.categoryChipText, { color: colors.text }]
                     }
                   >
                     {cat.name}
@@ -358,11 +364,11 @@ export default function AddExpenseScreen() {
               ))}
             </View>
           )}
-          {categoryError && <ThemedText style={styles.fieldError}>{categoryError}</ThemedText>}
+          {categoryError && <ThemedText style={[styles.fieldError, { color: colors.error }]}>{categoryError}</ThemedText>}
         </View>
 
         {(createMutation.isError || uploadMutation.isError) && (
-          <ThemedText style={styles.error}>
+          <ThemedText style={[styles.error, { color: colors.error }]}>
             {(createMutation.error ?? uploadMutation.error) instanceof Error
               ? (createMutation.error ?? uploadMutation.error)!.message
               : "Something went wrong"}
@@ -372,6 +378,7 @@ export default function AddExpenseScreen() {
         <Pressable
           style={[
             styles.submitBtn,
+            { backgroundColor: colors.tint },
             (!isValid || createMutation.isPending) && styles.submitBtnDisabled,
           ]}
           onPress={handleSubmit}
@@ -411,7 +418,7 @@ export default function AddExpenseScreen() {
               style={styles.photoModalClose}
               onPress={() => setPhotoModalUri(null)}
             >
-              <View style={styles.photoModalCloseInner}>
+              <View style={[styles.photoModalCloseInner, { backgroundColor: colors.tint }]}>
                 <RNText style={styles.photoModalCloseText}>Close</RNText>
               </View>
             </Pressable>
@@ -425,15 +432,13 @@ export default function AddExpenseScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1 },
   scrollContent: { padding: 16, paddingTop: 8 },
-  screenTitle: { fontSize: 28, fontWeight: "700", marginBottom: 4 },
-  screenSubtitle: { fontSize: 15, color: "#64748b", marginBottom: 24 },
+  screenTitle: { fontSize: 28, fontFamily: Font.bold, marginBottom: 4 },
+  screenSubtitle: { fontSize: 15, marginBottom: 24 },
   card: {
-    backgroundColor: "#f8fafc",
     borderRadius: 16,
     padding: 16,
     marginBottom: 16,
     borderWidth: 1,
-    borderColor: "#e2e8f0",
   },
   cardHeader: {
     flexDirection: "row",
@@ -441,10 +446,10 @@ const styles = StyleSheet.create({
     gap: 8,
     marginBottom: 12,
   },
-  cardTitle: { fontSize: 14, fontWeight: "600", color: "#475569" },
-  fieldError: { color: "#b91c1c", fontSize: 13, marginTop: 6 },
+  cardTitle: { fontSize: 14, fontFamily: Font.semiBold },
+  fieldError: { fontSize: 13, marginTop: 6 },
   loadingCategories: { flexDirection: "row", alignItems: "center", gap: 8 },
-  loadingText: { fontSize: 14, color: "#64748b" },
+  loadingText: { fontSize: 14 },
   receiptPreview: { position: "relative" },
   receiptImage: { width: "100%", height: 180, borderRadius: 12 },
   uploadOverlay: {

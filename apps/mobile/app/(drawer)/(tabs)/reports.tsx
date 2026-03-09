@@ -20,6 +20,9 @@ import * as Print from "expo-print";
 import { SymbolView } from "expo-symbols";
 
 import { useAuth } from "@/contexts/AuthContext";
+import Colors from "@/constants/Colors";
+import { Font } from "@/constants/Theme";
+import { useColorScheme } from "@/components/useColorScheme";
 import { YearSelector } from "@/components/YearSelector";
 import { fetchExpenses, fetchCategories } from "@/lib/api";
 import { formatAmount, getYearRange, MONTH_NAMES } from "@/lib/formatters";
@@ -70,6 +73,8 @@ function buildMatrix(expenses: Expense[], categoryOrder: string[]): ReportMatrix
 export default function ReportsScreen() {
   const { user, token } = useAuth();
   const router = useRouter();
+  const colorScheme = useColorScheme();
+  const colors = Colors[colorScheme];
   const now = new Date();
   const [selectedYear, setSelectedYear] = useState(now.getFullYear());
   const [exporting, setExporting] = useState<"pdf" | "csv" | null>(null);
@@ -335,36 +340,34 @@ export default function ReportsScreen() {
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-      <Text style={styles.title}>Expenses by Month & Category</Text>
+      <Text style={[styles.title, { color: colors.text }]}>Expenses by Month & Category</Text>
 
       <YearSelector selectedYear={selectedYear} onYearChange={setSelectedYear} />
 
       {isLoading ? (
-        <ActivityIndicator size="large" style={styles.loader} />
+        <ActivityIndicator size="large" style={styles.loader} color={colors.tint} />
       ) : (
         <>
-          <View style={styles.summaryCard}>
-            <Text style={styles.summaryTitle}>{selectedYear}</Text>
-            <Text style={styles.summaryTotal}>
+          <View style={[styles.summaryCard, { backgroundColor: colors.surfaceElevated, borderColor: colors.tint }]}>
+            <Text style={[styles.summaryTitle, { color: colors.tint }]}>{selectedYear}</Text>
+            <Text style={[styles.summaryTotal, { color: colors.text }]}>
               {formatAmount(matrix.grandTotal)}
             </Text>
-            <Text style={styles.summaryCount}>
+            <Text style={[styles.summaryCount, { color: colors.textSecondary }]}>
               {expenses.length} expense{expenses.length !== 1 ? "s" : ""}
             </Text>
           </View>
 
           {matrix.categories.length > 0 && (
-            <View style={styles.card}>
-              <Text style={styles.cardTitle}>Total by Category</Text>
+            <View style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+              <Text style={[styles.cardTitle, { color: colors.textSecondary }]}>Total by Category</Text>
               {matrix.categories
                 .map((cat, i) => ({ name: cat, amount: matrix.colTotals[i] }))
                 .sort((a, b) => b.amount - a.amount)
                 .map(({ name, amount }) => (
-                  <View key={name} style={styles.categoryRow}>
-                    <Text style={styles.categoryName}>{name}</Text>
-                    <Text style={styles.categoryAmount}>
-                      {formatAmount(amount)}
-                    </Text>
+                  <View key={name} style={[styles.categoryRow, { borderBottomColor: colors.border }]}>
+                    <Text style={[styles.categoryName, { color: colors.text }]}>{name}</Text>
+                    <Text style={[styles.categoryAmount, { color: colors.text }]}>{formatAmount(amount)}</Text>
                   </View>
                 ))}
             </View>
@@ -372,10 +375,10 @@ export default function ReportsScreen() {
 
           {/* Export buttons */}
           <View style={styles.exportSection}>
-            <Text style={styles.exportTitle}>Download</Text>
+            <Text style={[styles.exportTitle, { color: colors.textSecondary }]}>Download</Text>
             <View style={styles.exportButtons}>
               <Pressable
-                style={[styles.exportBtn, exporting && styles.exportBtnDisabled]}
+                style={[styles.exportBtn, { backgroundColor: colors.tint }, exporting && styles.exportBtnDisabled]}
                 onPress={handleExportPDF}
                 disabled={!!exporting}
               >
@@ -389,7 +392,7 @@ export default function ReportsScreen() {
                 )}
               </Pressable>
               <Pressable
-                style={[styles.exportBtn, exporting && styles.exportBtnDisabled]}
+                style={[styles.exportBtn, { backgroundColor: colors.tint }, exporting && styles.exportBtnDisabled]}
                 onPress={handleExportCSV}
                 disabled={!!exporting}
               >
@@ -416,43 +419,38 @@ const styles = StyleSheet.create({
   container: { flex: 1 },
   content: { padding: 16 },
   centered: { justifyContent: "center", alignItems: "center", padding: 24 },
-  title: { fontSize: 24, fontWeight: "700", marginBottom: 20 },
-  errorText: { color: "#c00", textAlign: "center" },
-  retryBtn: { marginTop: 16, padding: 12, backgroundColor: "#eef2ff", borderRadius: 8 },
-  retryText: { color: "#6366f1", fontSize: 16, fontWeight: "600" },
+  title: { fontSize: 24, fontFamily: Font.bold, marginBottom: 20 },
+  errorText: { textAlign: "center" },
+  retryBtn: { marginTop: 16, padding: 12, borderRadius: 8 },
+  retryText: { fontSize: 16, fontFamily: Font.semiBold },
   loader: { marginTop: 48 },
   summaryCard: {
-    backgroundColor: "#eef2ff",
     borderRadius: 16,
     padding: 20,
     marginBottom: 20,
     borderWidth: 1,
-    borderColor: "#c7d2fe",
   },
-  summaryTitle: { fontSize: 14, fontWeight: "600", color: "#6366f1", marginBottom: 4 },
-  summaryTotal: { fontSize: 28, fontWeight: "700" },
-  summaryCount: { fontSize: 14, color: "#64748b", marginTop: 4 },
+  summaryTitle: { fontSize: 14, fontFamily: Font.semiBold, marginBottom: 4 },
+  summaryTotal: { fontSize: 28, fontFamily: Font.bold },
+  summaryCount: { fontSize: 14, marginTop: 4 },
   card: {
-    backgroundColor: "#f8fafc",
     borderRadius: 16,
     padding: 16,
     marginBottom: 20,
     borderWidth: 1,
-    borderColor: "#e2e8f0",
   },
-  cardTitle: { fontSize: 14, fontWeight: "600", color: "#64748b", marginBottom: 12 },
+  cardTitle: { fontSize: 14, fontFamily: Font.semiBold, marginBottom: 12 },
   categoryRow: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
     paddingVertical: 10,
     borderBottomWidth: 1,
-    borderBottomColor: "#e2e8f0",
   },
-  categoryName: { fontSize: 15, fontWeight: "500" },
-  categoryAmount: { fontSize: 15, fontWeight: "600" },
+  categoryName: { fontSize: 15, fontFamily: Font.medium },
+  categoryAmount: { fontSize: 15, fontFamily: Font.semiBold },
   exportSection: { marginTop: 8 },
-  exportTitle: { fontSize: 14, fontWeight: "600", marginBottom: 12, color: "#64748b" },
+  exportTitle: { fontSize: 14, fontFamily: Font.semiBold, marginBottom: 12 },
   exportButtons: { flexDirection: "row", gap: 12 },
   exportBtn: {
     flex: 1,
@@ -460,10 +458,9 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     gap: 8,
-    backgroundColor: "#6366f1",
     paddingVertical: 14,
     borderRadius: 12,
   },
   exportBtnDisabled: { opacity: 0.7 },
-  exportBtnText: { color: "#fff", fontSize: 16, fontWeight: "600" },
+  exportBtnText: { color: "#fff", fontSize: 16, fontFamily: Font.semiBold },
 });

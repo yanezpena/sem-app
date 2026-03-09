@@ -16,6 +16,9 @@ import { useRouter } from "expo-router";
 import { Text, View } from "@/components/Themed";
 import { PhotoWithTooltip } from "@/components/PhotoWithTooltip";
 import { YearSelector } from "@/components/YearSelector";
+import Colors from "@/constants/Colors";
+import { Font } from "@/constants/Theme";
+import { useColorScheme } from "@/components/useColorScheme";
 import { fetchExpenses, deleteExpense } from "@/lib/api";
 import { formatAmount, formatDate, getYearRange } from "@/lib/formatters";
 import { resolveReceiptUrl } from "@/lib/utils";
@@ -27,6 +30,8 @@ export default function ExpensesScreen() {
   const { user, token } = useAuth();
   const router = useRouter();
   const queryClient = useQueryClient();
+  const colorScheme = useColorScheme();
+  const colors = Colors[colorScheme];
   const now = new Date();
   const [selectedYear, setSelectedYear] = useState(now.getFullYear());
   const [photoModalUri, setPhotoModalUri] = useState<string | null>(null);
@@ -78,7 +83,7 @@ export default function ExpensesScreen() {
     ({ item }: { item: Expense }) => {
       const receiptFullUri = resolveReceiptUrl(item.receiptUrl);
       return (
-        <RNView style={styles.item}>
+        <RNView style={[styles.item, { borderColor: colors.border }]}>
           {item.receiptUrl && receiptFullUri ? (
             <PhotoWithTooltip
               uri={receiptFullUri}
@@ -92,7 +97,7 @@ export default function ExpensesScreen() {
               <RNView style={styles.itemThumbnailPlaceholder}>
                 <SymbolView
                   name={{ ios: "photo", android: "image_not_supported", web: "image_not_supported" }}
-                  tintColor="#b91c1c"
+                  tintColor={colors.error}
                   size={24}
                 />
               </RNView>
@@ -105,9 +110,9 @@ export default function ExpensesScreen() {
             accessibilityRole="button"
           >
             <Text style={styles.itemAmount}>{formatAmount(item.amount)}</Text>
-            {item.description && <Text style={styles.itemDesc}>{item.description}</Text>}
-            {item.category && <Text style={styles.itemCategory}>{item.category.name}</Text>}
-            <Text style={styles.itemDate}>{formatDate(item.date)}</Text>
+            {item.description && <Text style={[styles.itemDesc, { color: colors.textSecondary }]}>{item.description}</Text>}
+            {item.category && <Text style={[styles.itemCategory, { color: colors.textMuted }]}>{item.category.name}</Text>}
+            <Text style={[styles.itemDate, { color: colors.textMuted }]}>{formatDate(item.date)}</Text>
           </Pressable>
           <Pressable
             style={styles.itemDeleteBtn}
@@ -116,12 +121,12 @@ export default function ExpensesScreen() {
             accessibilityLabel="Delete expense"
             accessibilityRole="button"
           >
-            <SymbolView name={{ ios: "trash", android: "delete", web: "delete" }} tintColor="#b91c1c" size={22} />
+            <SymbolView name={{ ios: "trash", android: "delete", web: "delete" }} tintColor={colors.error} size={22} />
           </Pressable>
         </RNView>
       );
     },
-    [handleDeletePress, router]
+    [handleDeletePress, router, colors]
   );
 
   if (!user) return null;
@@ -137,11 +142,11 @@ export default function ExpensesScreen() {
   if (error) {
     return (
       <View style={styles.centered}>
-        <Text style={styles.error}>
+        <Text style={[styles.error, { color: colors.error }]}>
           {error instanceof Error ? error.message : "Could not load expenses."}
         </Text>
-        <Pressable style={styles.retryBtn} onPress={() => refetch()} accessibilityRole="button" accessibilityLabel="Retry">
-          <Text style={styles.retryText}>Try again</Text>
+        <Pressable style={[styles.retryBtn, { backgroundColor: colors.surface }]} onPress={() => refetch()} accessibilityRole="button" accessibilityLabel="Retry">
+          <Text style={[styles.retryText, { color: colors.tint }]}>Try again</Text>
         </Pressable>
       </View>
     );
@@ -152,8 +157,8 @@ export default function ExpensesScreen() {
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.title}>Expenses</Text>
-        <Text style={styles.total}>Total: {formatAmount(total)}</Text>
+        <Text style={[styles.title, { color: colors.text }]}>Expenses</Text>
+        <Text style={[styles.total, { color: colors.textSecondary }]}>Total: {formatAmount(total)}</Text>
       </View>
 
       <YearSelector selectedYear={selectedYear} onYearChange={setSelectedYear} />
@@ -166,7 +171,7 @@ export default function ExpensesScreen() {
         maxToRenderPerBatch={10}
         windowSize={10}
         ListEmptyComponent={
-          <Text style={styles.empty}>No expenses yet. Tap "Add" to log one.</Text>
+          <Text style={[styles.empty, { color: colors.textSecondary }]}>No expenses yet. Tap "Add" to log one.</Text>
         }
       />
 
@@ -174,17 +179,17 @@ export default function ExpensesScreen() {
         <Modal visible transparent animationType="fade" onRequestClose={handleDeleteCancel}>
           <RNView style={styles.confirmOverlay}>
             <Pressable style={StyleSheet.absoluteFill} onPress={handleDeleteCancel} accessibilityLabel="Cancel" />
-            <Pressable style={styles.confirmCard} onPress={() => {}}>
-              <RNText style={styles.confirmTitle}>Delete expense?</RNText>
-              <RNText style={styles.confirmMessage}>
+            <Pressable style={[styles.confirmCard, { backgroundColor: colors.background }]} onPress={() => {}}>
+              <RNText style={[styles.confirmTitle, { color: colors.text }]}>Delete expense?</RNText>
+              <RNText style={[styles.confirmMessage, { color: colors.textSecondary }]}>
                 {`Remove "${deleteConfirmExpense.description || formatAmount(deleteConfirmExpense.amount)}"${deleteConfirmExpense.category ? ` (${deleteConfirmExpense.category.name})` : ""}? This cannot be undone.`}
               </RNText>
               <RNView style={styles.confirmButtons}>
                 <Pressable style={styles.confirmCancelBtn} onPress={handleDeleteCancel} accessibilityLabel="Cancel">
-                  <RNText style={styles.confirmCancelText}>Cancel</RNText>
+                  <RNText style={[styles.confirmCancelText, { color: colors.textSecondary }]}>Cancel</RNText>
                 </Pressable>
                 <Pressable
-                  style={[styles.confirmDeleteBtn, deleteMutation.isPending && styles.confirmBtnDisabled]}
+                  style={[styles.confirmDeleteBtn, { backgroundColor: colors.error }, deleteMutation.isPending && styles.confirmBtnDisabled]}
                   onPress={handleDeleteConfirm}
                   disabled={deleteMutation.isPending}
                   accessibilityLabel={deleteMutation.isPending ? "Deleting" : "Delete"}
@@ -204,7 +209,7 @@ export default function ExpensesScreen() {
               <Image source={{ uri: photoModalUri }} style={styles.photoModalImage} resizeMode="contain" />
             </RNView>
             <Pressable style={styles.photoModalClose} onPress={() => setPhotoModalUri(null)} accessibilityLabel="Close">
-              <RNView style={styles.photoModalCloseInner}>
+              <RNView style={[styles.photoModalCloseInner, { backgroundColor: colors.tint }]}>
                 <RNText style={styles.photoModalCloseText}>Close</RNText>
               </RNView>
             </Pressable>
@@ -243,11 +248,11 @@ const styles = StyleSheet.create({
   },
   itemMain: { flex: 1 },
   itemDeleteBtn: { padding: 8, marginLeft: 4, justifyContent: "center", alignItems: "center" },
-  itemAmount: { fontWeight: "600", fontSize: 16 },
-  itemDesc: { color: "#666", marginTop: 2 },
-  itemCategory: { color: "#999", fontSize: 12, marginTop: 2 },
-  itemDate: { color: "#666", fontSize: 12 },
-  empty: { marginTop: 24, textAlign: "center", color: "#666" },
+  itemAmount: { fontFamily: Font.semiBold, fontSize: 16 },
+  itemDesc: { marginTop: 2 },
+  itemCategory: { fontSize: 12, marginTop: 2 },
+  itemDate: { fontSize: 12 },
+  empty: { marginTop: 24, textAlign: "center" },
   photoModalOverlay: {
     flex: 1,
     backgroundColor: "rgba(0,0,0,0.9)",

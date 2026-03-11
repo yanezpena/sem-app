@@ -61,6 +61,8 @@ DATABASE_URL="postgresql://expense:expense@localhost:5433/expense_tracker?schema
 - **Web app:** http://localhost:8080  
 - **PostgreSQL:** localhost:**5433** (user `expense`, password `expense`, db `expense_tracker`)
 
+The web app’s API URL is set at **build time** (default `http://localhost:3000`). If you open the web app from another device (e.g. `http://<your-pc-ip>:8080`), set `EXPO_PUBLIC_API_URL=http://<your-pc-ip>:3000` in `.env` and rebuild the web image: `docker compose build web && docker compose up -d`.
+
 To seed categories: `cd apps/api && DATABASE_URL="postgresql://expense:expense@localhost:5433/expense_tracker?schema=public" pnpm exec prisma db seed`
 
 ### Option B: Local dev (Node + Docker for DB only)

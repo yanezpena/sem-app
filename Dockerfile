@@ -26,6 +26,8 @@ RUN pnpm --filter api build
 # -----------------------------------------------------------------------------
 FROM node:20-bookworm-slim AS runner
 
+RUN apt-get update -y && apt-get install -y --no-install-recommends openssl ca-certificates && rm -rf /var/lib/apt/lists/*
+
 WORKDIR /app
 
 # Copy workspace layout and root node_modules (pnpm store / hoisted deps)
@@ -45,4 +47,4 @@ ENV NODE_ENV=production
 EXPOSE 3000
 
 WORKDIR /app/apps/api
-CMD ["node", "dist/main.js"]
+CMD ["node", "src/main.js"]
